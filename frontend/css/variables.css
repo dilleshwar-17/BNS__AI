@@ -1,0 +1,19 @@
+:root {
+    --jade: #0d8a5e;
+    --jade-dark: #0a6e4a;
+    --jade-light: #10b87a;
+    --gold: #b8860b;
+    --gold-light: #daa520;
+    --bg-primary: #0a0a1a;
+    --bg-secondary: #12122a;
+    --bg-card: rgba(18, 18, 42, 0.7);
+    --text-primary: #e8e8f0;
+    --text-secondary: #a0a0b8;
+    --border-color: rgba(13, 138, 94, 0.3);
+    --shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+    --radius: 16px;
+    --radius-sm: 8px;
+    --glass-bg: rgba(18, 18, 42, 0.6);
+    --glass-border: rgba(13, 138, 94, 0.2);
+    --glass-shadow: 0 8px 32px rgba(0, 0, 0, 0.4);
+}

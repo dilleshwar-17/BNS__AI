@@ -1,0 +1,50 @@
+{
+  "template": "civil_plaint",
+  "title": "Civil Plaint",
+  "category": "civil",
+  "description": "File a civil suit under Order IV Rule 1 of CPC, 1908",
+  "version": "1.0",
+  "estimated_time": "6-8 min",
+  "sections": [
+    {
+      "id": "parties",
+      "title": "Parties",
+      "description": "Who is suing whom?",
+      "fields": [
+        {"key": "plaintiff_name", "label": "Plaintiff Full Name", "type": "text", "required": true},
+        {"key": "plaintiff_address", "label": "Plaintiff Address", "type": "textarea", "required": true},
+        {"key": "defendant_name", "label": "Defendant Full Name", "type": "text", "required": true},
+        {"key": "defendant_address", "label": "Defendant Address", "type": "textarea", "required": true},
+        {"key": "court_name", "label": "Court Name", "type": "text", "required": true, "placeholder": "e.g. Civil Judge, Senior Division, Delhi"}
+      ]
+    },
+    {
+      "id": "cause",
+      "title": "Cause of Action",
+      "description": "Why are you filing this suit?",
+      "fields": [
+        {"key": "suit_type", "label": "Type of Suit", "type": "select", "required": true, "options": ["Recovery of Money", "Possession of Property", "Permanent Injunction", "Damages / Compensation", "Declaration", "Specific Performance", "Other"]},
+        {"key": "facts", "label": "Detailed Facts of the Case", "type": "textarea", "required": true, "placeholder": "Explain all facts chronologically...", "validation": {"min_length": 40}},
+        {"key": "cause_date", "label": "Date of Cause of Action", "type": "date", "required": true},
+        {"key": "cause_place", "label": "Place of Cause of Action", "type": "text", "required": false},
+        {"key": "court_fee_value", "label": "Suit Valuation for Court Fee (Rs.)", "type": "number", "required": true},
+        {"key": "relief_sought", "label": "Relief / Decree Sought", "type": "textarea", "required": true, "placeholder": "What do you want the court to order?"}
+      ]
+    }
+  ],
+  "conditionals": [],
+  "output_structure": [
+    "Court Heading",
+    "Parties",
+    "Jurisdiction",
+    "Facts",
+    "Cause of Action",
+    "Court Fee Valuation",
+    "Relief Sought",
+    "Verification",
+    "Plaint Signature"
+  ],
+  "retrieval_config": {"statutes": ["CPC 1908", "Limitation Act 1963"], "max_results": 5, "relevance_threshold": 0.6},
+  "prompt_instructions": "Draft a civil plaint under Order IV Rule 1 of CPC, 1908. Include court heading, parties, jurisdiction, facts, cause of action, valuation, relief, and verification.",
+  "export_settings": {"formats": ["docx", "pdf", "txt", "markdown"], "font": "Times New Roman", "font_size": 12}
+}

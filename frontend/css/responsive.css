@@ -1,0 +1,10 @@
+@media (max-width: 768px) {
+    .nav-links { display: none; }
+    #main-content { padding: 16px; }
+    .hero h1 { font-size: 32px; }
+    .chat-layout { flex-direction: column; height: auto; }
+    .chat-sidebar { width: 100%; max-height: 200px; }
+    .chat-main { min-height: 500px; }
+    .message { max-width: 95%; }
+    .draft-grid { grid-template-columns: 1fr; }
+}

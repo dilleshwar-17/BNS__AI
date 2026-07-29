@@ -1,0 +1,14 @@
+.hero {
+    text-align: center;
+    padding: 80px 20px 60px;
+    background: linear-gradient(135deg, rgba(13, 138, 94, 0.1), rgba(184, 134, 11, 0.1));
+    background-size: 200% 200%;
+    animation: gradientShift 8s ease infinite;
+    border-radius: var(--radius);
+    margin-bottom: 40px;
+}
+.hero h1 { font-size: 48px; font-weight: 800; margin-bottom: 16px; background: linear-gradient(135deg, var(--jade-light), var(--gold)); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+.hero p { font-size: 18px; color: var(--text-secondary); max-width: 600px; margin: 0 auto 32px; line-height: 1.6; }
+.hero-buttons { display: flex; gap: 16px; justify-content: center; }
+.hero-buttons .btn { padding: 14px 32px; font-size: 16px; }
+.features { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 24px; margin-bottom: 40px; }

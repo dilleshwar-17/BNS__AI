@@ -1,0 +1,49 @@
+__pycache__/
+*.py[cod]
+*.pyo
+.env
+.venv/
+venv/
+*.db
+*.sqlite3
+data/cache/
+data/uploads/
+data/exports/
+data/embeddings/
+node_modules/
+dist/
+build/
+*.egg-info/
+.DS_Store
+Thumbs.db
+backups/
+*.log
+*.out
+.vscode/
+.idea/
+
+# Environment
+.env
+.env.local
+
+# PDFs
+*.pdf
+
+# Extracted text
+*_extracted.txt
+
+# Generated reports
+Reports/
+
+# Local data
+data/
+
+# Python cache
+__pycache__/
+*.pyc
+
+# Virtual environments
+.venv/
+venv/
+
+.docx

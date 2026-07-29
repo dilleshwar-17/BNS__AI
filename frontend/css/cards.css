@@ -1,0 +1,15 @@
+.feature-card {
+    background: var(--glass-bg);
+    backdrop-filter: blur(16px);
+    -webkit-backdrop-filter: blur(16px);
+    border: 1px solid var(--glass-border);
+    border-radius: var(--radius);
+    padding: 28px;
+    transition: all 0.3s;
+    background-size: 200% 200%;
+    animation: gradientShift 12s ease infinite;
+}
+.feature-card:hover { transform: translateY(-4px); border-color: var(--jade); box-shadow: var(--glass-shadow); }
+.feature-icon { font-size: 36px; margin-bottom: 16px; }
+.feature-card h3 { font-size: 18px; margin-bottom: 8px; color: var(--jade-light); }
+.feature-card p { color: var(--text-secondary); line-height: 1.5; font-size: 14px; }

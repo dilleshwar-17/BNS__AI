@@ -1,0 +1,62 @@
+[
+  {
+    "query": "What is the procedure for filing an FIR in India?",
+    "expected_answer": "An FIR (First Information Report) is filed under Section 154 of the Code of Criminal Procedure, 1973. The informant must go to the nearest police station and give oral or written information about a cognizable offence. The police officer must reduce the information to writing, read it to the informant, and obtain a signature. A copy of the FIR must be given to the informant free of charge.",
+    "expected_doc_ids": ["crpc_s154", "bns_s173"],
+    "expected_sections": ["Section 154 CrPC", "Section 173 BNS"]
+  },
+  {
+    "query": "Explain Section 302 of the Indian Penal Code",
+    "expected_answer": "Section 302 of the Indian Penal Code deals with punishment for murder. Whoever commits murder shall be punished with death, or imprisonment for life, and shall also be liable to fine. Under the Bharatiya Nyaya Sanhita 2023, the corresponding provision is Section 101.",
+    "expected_doc_ids": ["ipc_s302", "bns_s101"],
+    "expected_sections": ["Section 302 IPC", "Section 101 BNS"]
+  },
+  {
+    "query": "What are the rights of a tenant under rent control?",
+    "expected_answer": "Tenants under rent control legislation have several rights including: protection against unreasonable eviction, right to fair rent as determined by the Rent Controller, right to essential services, right to transfer tenancy, and right to make improvements. The specific rights vary by state as rent control is a state subject in India.",
+    "expected_doc_ids": ["rent_control_general"],
+    "expected_sections": ["Rent Control Act"]
+  },
+  {
+    "query": "How to file a consumer complaint in India?",
+    "expected_answer": "Consumer complaints can be filed under the Consumer Protection Act, 2019. A complaint can be filed electronically or in physical form before the appropriate District, State, or National Consumer Disputes Redressal Commission depending on the value of goods or services and the compensation claimed. The complaint must be filed within 2 years from the date of cause of action.",
+    "expected_doc_ids": ["cpa_2019", "cpa_rules"],
+    "expected_sections": ["Consumer Protection Act 2019", "Section 34-39 CPA"]
+  },
+  {
+    "query": "What is the doctrine of stare decisis?",
+    "expected_answer": "Stare decisis is a legal doctrine that courts will adhere to precedent in making their decisions. It means to stand by things decided. In Indian jurisprudence, the doctrine is followed but not in its rigid English form. The Supreme Court's decisions are binding on all courts in India, and High Court decisions are binding on subordinate courts within their jurisdiction.",
+    "expected_doc_ids": ["doctrine_stare_decisis"],
+    "expected_sections": ["Article 141 Constitution"]
+  },
+  {
+    "query": "What is the process for obtaining bail?",
+    "expected_answer": "Bail can be obtained through three types: regular bail under Section 437/439 CrPC (now BNS), interim bail, and anticipatory bail under Section 438 CrPC. For regular bail, an application is filed before the appropriate court. The court considers factors like nature of offence, likelihood of absconding, and tampering with evidence.",
+    "expected_doc_ids": ["crpc_s437", "crpc_s438", "crpc_s439"],
+    "expected_sections": ["Section 437 CrPC", "Section 438 CrPC", "Section 439 CrPC"]
+  },
+  {
+    "query": "Explain Section 144 of CrPC",
+    "expected_answer": "Section 144 of the Code of Criminal Procedure empowers a Magistrate to pass an order prohibiting assembly of five or more persons in a specified area. This can be invoked in cases of apprehended danger or nuisance. The order cannot exceed two months but can be extended. Under BNS 2023, the corresponding provision is in Section 163.",
+    "expected_doc_ids": ["crpc_s144", "bns_s163"],
+    "expected_sections": ["Section 144 CrPC", "Section 163 BNS"]
+  },
+  {
+    "query": "What are fundamental rights under Article 19?",
+    "expected_answer": "Article 19 of the Indian Constitution guarantees six fundamental freedoms to citizens: (1) freedom of speech and expression, (2) freedom of assembly, (3) freedom of association, (4) freedom of movement, (5) freedom of residence, and (6) freedom of profession. These rights are subject to reasonable restrictions under Article 19(2)-(6) on grounds like sovereignty, security, public order, and defamation.",
+    "expected_doc_ids": ["constitution_a19"],
+    "expected_sections": ["Article 19(1)(a)-(g) Constitution"]
+  },
+  {
+    "query": "How to draft a legal notice?",
+    "expected_answer": "A legal notice should contain: name and address of the sender and recipient, facts of the case in chronological order, legal provisions relied upon, relief or action demanded, and a reasonable time limit for compliance (usually 15-30 days). The notice must be sent through a lawyer and should be sent by registered post or courier with acknowledgment due.",
+    "expected_doc_ids": ["legal_notice_guide"],
+    "expected_sections": ["Order 5 Rule 19 CPC"]
+  },
+  {
+    "query": "What is the limitation period for filing a suit?",
+    "expected_answer": "The Limitation Act, 1963 prescribes limitation periods for various suits. For example: simple money suit - 3 years, suit on a written instrument - 3 years, suit for possession of immovable property - 12 years, suit for declaration - 3 years, suit for specific performance - 3 years from the date of breach. The period varies depending on the nature of the claim.",
+    "expected_doc_ids": ["limitation_act_1963"],
+    "expected_sections": ["Limitation Act Schedule"]
+  }
+]

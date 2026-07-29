@@ -1,0 +1,75 @@
+{
+  "template": "divorce_petition",
+  "title": "Divorce Petition",
+  "category": "family",
+  "description": "File for dissolution of marriage under applicable personal law",
+  "version": "1.0",
+  "estimated_time": "6-8 min",
+  "sections": [
+    {
+      "id": "parties",
+      "title": "Parties",
+      "description": "Who is filing and against whom?",
+      "fields": [
+        {"key": "petitioner_name", "label": "Petitioner Full Name", "type": "text", "required": true},
+        {"key": "petitioner_address", "label": "Petitioner Address", "type": "textarea", "required": true},
+        {"key": "petitioner_occupation", "label": "Petitioner Occupation", "type": "text", "required": false},
+        {"key": "respondent_name", "label": "Respondent Full Name", "type": "text", "required": true},
+        {"key": "respondent_address", "label": "Respondent Address", "type": "textarea", "required": true}
+      ]
+    },
+    {
+      "id": "marriage",
+      "title": "Marriage Details",
+      "description": "Details of the marriage",
+      "fields": [
+        {"key": "marriage_date", "label": "Date of Marriage", "type": "date", "required": true},
+        {"key": "marriage_place", "label": "Place of Marriage", "type": "text", "required": true},
+        {"key": "marriage_registered", "label": "Was the marriage registered?", "type": "boolean", "required": false, "default": false},
+        {"key": "personal_law", "label": "Applicable Personal Law", "type": "select", "required": true, "options": ["Hindu Marriage Act, 1955", "Special Marriage Act, 1954", "Indian Divorce Act, 1869", "Muslim Personal Law", "Other"]},
+        {"key": "last_residence", "label": "Last Place of Residence Together", "type": "textarea", "required": false}
+      ]
+    },
+    {
+      "id": "grounds",
+      "title": "Grounds for Divorce",
+      "description": "On what grounds?",
+      "fields": [
+        {"key": "grounds", "label": "Ground(s) for Divorce", "type": "select", "required": true, "options": ["Cruelty", "Desertion (2+ years)", "Adultery", "Mutual Consent", "Conversion", "Mental Disorder", "Leprosy", "Venereal Disease", "Presumption of Death (7+ years)", "Irretrievable Breakdown", "Other"]},
+        {"key": "ground_details", "label": "Detailed Grounds", "type": "textarea", "required": true, "placeholder": "Describe specific incidents and acts that constitute the ground(s)...", "validation": {"min_length": 40}},
+        {"key": "previous_litigation", "label": "Previous Litigation (if any)", "type": "textarea", "required": false, "placeholder": "Details of any previous cases between parties"}
+      ]
+    },
+    {
+      "id": "children",
+      "title": "Children & Relief",
+      "description": "Children, custody, maintenance",
+      "fields": [
+        {"key": "has_children", "label": "Are there children from the marriage?", "type": "boolean", "required": false, "default": false},
+        {"key": "children_details", "label": "Children Details (names, ages)", "type": "textarea", "required": false},
+        {"key": "custody_preference", "label": "Custody Preference", "type": "textarea", "required": false, "placeholder": "Proposed custody arrangement"},
+        {"key": "maintenance_requested", "label": "Is maintenance / alimony requested?", "type": "boolean", "required": false, "default": false},
+        {"key": "relief", "label": "Relief / Prayer", "type": "textarea", "required": true, "placeholder": "What orders do you seek from the court?"}
+      ]
+    }
+  ],
+  "conditionals": [
+    {"field": "grounds", "value": "Mutual Consent", "show_fields": ["settlement_terms"]},
+    {"field": "settlement_terms", "label": "Settlement Terms", "type": "textarea", "required": false, "condition": "grounds_mutual"},
+    {"field": "has_children", "value": true, "show_fields": ["children_details", "custody_preference"]}
+  ],
+  "output_structure": [
+    "Court Heading",
+    "Parties",
+    "Marriage Details",
+    "Facts",
+    "Grounds for Divorce",
+    "Children & Custody (if applicable)",
+    "Relief Sought",
+    "Verification",
+    "Petitioner Signature"
+  ],
+  "retrieval_config": {"statutes": ["Hindu Marriage Act 1955", "Special Marriage Act 1954", "Family Courts Act 1984"], "max_results": 5, "relevance_threshold": 0.6},
+  "prompt_instructions": "Draft a divorce petition under Indian personal law. Include court heading, marriage details, facts, grounds, children/custody, and prayer.",
+  "export_settings": {"formats": ["docx", "pdf", "txt", "markdown"], "font": "Times New Roman", "font_size": 12}
+}

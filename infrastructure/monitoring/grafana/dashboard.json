@@ -1,0 +1,8 @@
+{
+  "title": "BNS AI Dashboard",
+  "panels": [
+    {"title": "API Requests", "type": "graph", "targets": [{"expr": "rate(http_requests_total[5m])"}]},
+    {"title": "LLM Latency", "type": "graph", "targets": [{"expr": "llm_request_duration_ms"}]},
+    {"title": "Active Users", "type": "stat", "targets": [{"expr": "active_users"}]}
+  ]
+}

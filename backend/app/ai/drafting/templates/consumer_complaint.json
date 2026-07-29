@@ -1,0 +1,69 @@
+{
+  "template": "consumer_complaint",
+  "title": "Consumer Complaint",
+  "category": "consumer",
+  "description": "File a complaint under Section 35 of the Consumer Protection Act, 2019",
+  "version": "1.0",
+  "estimated_time": "6-8 min",
+  "sections": [
+    {
+      "id": "complainant",
+      "title": "Complainant Details",
+      "description": "Who is filing the complaint?",
+      "fields": [
+        {"key": "complainant_name", "label": "Full Name", "type": "text", "required": true},
+        {"key": "complainant_address", "label": "Address", "type": "textarea", "required": true},
+        {"key": "complainant_contact", "label": "Contact Number", "type": "phone", "required": true}
+      ]
+    },
+    {
+      "id": "opposite",
+      "title": "Opposite Party Details",
+      "description": "Who are you complaining against?",
+      "fields": [
+        {"key": "opposite_party", "label": "Name", "type": "text", "required": true, "placeholder": "e.g. ABC Electronics Pvt. Ltd."},
+        {"key": "opposite_address", "label": "Address", "type": "textarea", "required": true}
+      ]
+    },
+    {
+      "id": "purchase",
+      "title": "Purchase / Service Details",
+      "description": "Details of the transaction",
+      "fields": [
+        {"key": "product_service", "label": "Product / Service", "type": "text", "required": true, "placeholder": "e.g. Samsung Refrigerator RT28"},
+        {"key": "invoice_number", "label": "Invoice / Receipt Number", "type": "text", "required": false},
+        {"key": "purchase_date", "label": "Date of Purchase / Service", "type": "date", "required": true},
+        {"key": "price_paid", "label": "Price Paid (Rs.)", "type": "number", "required": true}
+      ]
+    },
+    {
+      "id": "complaint",
+      "title": "Complaint Details",
+      "description": "What went wrong?",
+      "fields": [
+        {"key": "defect_details", "label": "Defect / Deficiency Details", "type": "textarea", "required": true, "placeholder": "Describe the problem in detail...", "validation": {"min_length": 20}},
+        {"key": "communication_history", "label": "Communication History with Opposite Party", "type": "textarea", "required": false, "placeholder": "When you contacted them and what they said"},
+        {"key": "relief_requested", "label": "Relief Requested", "type": "textarea", "required": true, "placeholder": "e.g. Replacement of product, Refund of Rs. 25,000, Compensation for mental agony"}
+      ]
+    }
+  ],
+  "conditionals": [
+    {"field": "has_warranty", "label": "Is the product under warranty?", "type": "boolean", "required": false, "show_fields": ["warranty_details"]},
+    {"field": "warranty_details", "label": "Warranty Details", "type": "textarea", "required": false, "condition": "has_warranty"}
+  ],
+  "output_structure": [
+    "Commission Heading",
+    "Parties",
+    "Complainant Details",
+    "Opposite Party Details",
+    "Transaction Facts",
+    "Deficiency / Defect Details",
+    "Cause of Action",
+    "Relief Sought",
+    "Verification",
+    "List of Documents"
+  ],
+  "retrieval_config": {"statutes": ["Consumer Protection Act 2019"], "max_results": 5, "relevance_threshold": 0.6},
+  "prompt_instructions": "Draft a consumer complaint under Section 35 of the Consumer Protection Act, 2019. Include commission heading, parties, facts, cause of action, relief sought, and verification.",
+  "export_settings": {"formats": ["docx", "pdf", "txt", "markdown"], "font": "Times New Roman", "font_size": 12}
+}

@@ -1,0 +1,62 @@
+{
+  "template": "affidavit",
+  "title": "Affidavit",
+  "category": "civil",
+  "description": "Create a sworn affidavit for legal proceedings",
+  "version": "1.0",
+  "estimated_time": "4-6 min",
+  "sections": [
+    {
+      "id": "deponent",
+      "title": "Deponent Details",
+      "description": "Who is making this affidavit?",
+      "fields": [
+        {"key": "deponent_name", "label": "Full Name", "type": "text", "required": true},
+        {"key": "father_name", "label": "Father's / Husband's Name", "type": "text", "required": false},
+        {"key": "age", "label": "Age (years)", "type": "number", "required": false},
+        {"key": "occupation", "label": "Occupation", "type": "text", "required": false},
+        {"key": "address", "label": "Address", "type": "textarea", "required": true},
+        {"key": "purpose", "label": "Purpose of Affidavit", "type": "select", "required": true, "options": ["General Declaration", "Property Affidavit", "Identity Affidavit", "Income Affidavit", "Court Affidavit", "Other"]}
+      ]
+    },
+    {
+      "id": "declaration",
+      "title": "Declaration",
+      "description": "What facts are you swearing to?",
+      "fields": [
+        {"key": "declaration_1", "label": "Declaration Point 1", "type": "textarea", "required": true, "placeholder": "I, the deponent, state that..."},
+        {"key": "declaration_2", "label": "Declaration Point 2", "type": "textarea", "required": false},
+        {"key": "declaration_3", "label": "Declaration Point 3", "type": "textarea", "required": false},
+        {"key": "declaration_4", "label": "Declaration Point 4", "type": "textarea", "required": false},
+        {"key": "declaration_5", "label": "Declaration Point 5", "type": "textarea", "required": false}
+      ]
+    },
+    {
+      "id": "execution",
+      "title": "Execution Details",
+      "description": "Place and authority",
+      "fields": [
+        {"key": "place", "label": "Place (City)", "type": "text", "required": true},
+        {"key": "oath_commissioner", "label": "Oath Commissioner / Notary Name", "type": "text", "required": false}
+      ]
+    }
+  ],
+  "conditionals": [
+    {"field": "purpose", "value": "Property Affidavit", "show_fields": ["property_details"]},
+    {"field": "property_details", "label": "Property Details", "type": "textarea", "required": false, "condition": "purpose_value_property"},
+    {"field": "purpose", "value": "Identity Affidavit", "show_fields": ["id_proof"]},
+    {"field": "id_proof", "label": "ID Proof Details", "type": "textarea", "required": false, "condition": "purpose_value_identity"}
+  ],
+  "output_structure": [
+    "Court / Authority Heading",
+    "Deponent Introduction",
+    "Solemn Affirmation",
+    "Declaration Points",
+    "Verification",
+    "Deponent Signature",
+    "Notary / Oath Commissioner Placeholder"
+  ],
+  "retrieval_config": {"max_results": 3, "relevance_threshold": 0.5},
+  "prompt_instructions": "Draft a sworn affidavit for Indian legal proceedings. Include deponent details, solemn affirmation, numbered declaration points, verification clause, and signature block.",
+  "export_settings": {"formats": ["docx", "pdf", "txt"], "font": "Times New Roman", "font_size": 12}
+}

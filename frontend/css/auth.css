@@ -1,0 +1,17 @@
+.auth-page { display: flex; justify-content: center; align-items: center; padding: 40px 20px; }
+.auth-card {
+    background: var(--glass-bg);
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+    border: 1px solid var(--glass-border);
+    border-radius: var(--radius);
+    padding: 40px;
+    width: 100%;
+    max-width: 440px;
+    box-shadow: var(--glass-shadow);
+}
+.auth-card h2 { text-align: center; margin-bottom: 28px; font-size: 28px; background: linear-gradient(135deg, var(--jade-light), var(--gold)); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+.form-footer { text-align: center; margin-top: 20px; font-size: 14px; color: var(--text-secondary); }
+.form-footer a { color: var(--jade-light); text-decoration: none; }
+.form-footer a:hover { text-decoration: underline; }
+.error-message { color: #ff6b6b; font-size: 14px; margin-bottom: 16px; text-align: center; padding: 10px; background: rgba(255, 107, 107, 0.1); border-radius: var(--radius-sm); display: none; }

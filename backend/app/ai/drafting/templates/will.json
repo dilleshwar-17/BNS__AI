@@ -1,0 +1,72 @@
+{
+  "template": "will",
+  "title": "Last Will & Testament",
+  "category": "estate",
+  "description": "Create a legal will for disposition of property after death",
+  "version": "1.0",
+  "estimated_time": "6-8 min",
+  "sections": [
+    {
+      "id": "testator",
+      "title": "Testator Details",
+      "description": "Who is making this Will?",
+      "fields": [
+        {"key": "testator_name", "label": "Full Name", "type": "text", "required": true},
+        {"key": "testator_father_name", "label": "Father's / Husband's Name", "type": "text", "required": false},
+        {"key": "testator_age", "label": "Age (years)", "type": "number", "required": false},
+        {"key": "testator_address", "label": "Address", "type": "textarea", "required": true}
+      ]
+    },
+    {
+      "id": "executor",
+      "title": "Executor",
+      "description": "Who will execute the Will?",
+      "fields": [
+        {"key": "executor_name", "label": "Executor Full Name", "type": "text", "required": true},
+        {"key": "executor_address", "label": "Executor Address", "type": "textarea", "required": true}
+      ]
+    },
+    {
+      "id": "assets",
+      "title": "Assets & Distribution",
+      "description": "What property do you own and who should inherit?",
+      "fields": [
+        {"key": "immovable_property", "label": "Immovable Property (land, house, flat, etc.)", "type": "textarea", "required": true, "placeholder": "List each property and beneficiary:\n1. House at 42, Model Town — to my son Suresh\n2. Agricultural land at Village Rampur — to my daughter Priya"},
+        {"key": "bank_accounts", "label": "Bank Accounts, FDs, Investments", "type": "textarea", "required": false, "placeholder": "Accounts and their beneficiaries"},
+        {"key": "movable_property", "label": "Other Movable Property (vehicle, jewellery, etc.)", "type": "textarea", "required": false},
+        {"key": "special_instructions", "label": "Special Instructions / Bequests", "type": "textarea", "required": false, "placeholder": "Any specific gifts, conditions, or funeral instructions"}
+      ]
+    },
+    {
+      "id": "witnesses",
+      "title": "Witnesses",
+      "description": "Two witnesses are required",
+      "fields": [
+        {"key": "witness_1_name", "label": "Witness 1 — Full Name", "type": "text", "required": true},
+        {"key": "witness_1_address", "label": "Witness 1 — Address", "type": "textarea", "required": true},
+        {"key": "witness_2_name", "label": "Witness 2 — Full Name", "type": "text", "required": true},
+        {"key": "witness_2_address", "label": "Witness 2 — Address", "type": "textarea", "required": true}
+      ]
+    }
+  ],
+  "conditionals": [
+    {"field": "minor_beneficiary", "label": "Is there a minor beneficiary?", "type": "boolean", "required": false, "show_fields": ["guardian_name"]},
+    {"field": "guardian_name", "label": "Guardian for Minor Beneficiary", "type": "text", "required": false, "condition": "minor_beneficiary"},
+    {"field": "charity_included", "label": "Is any portion going to charity?", "type": "boolean", "required": false, "show_fields": ["charity_details"]},
+    {"field": "charity_details", "label": "Charity / Organization Details", "type": "textarea", "required": false, "condition": "charity_included"}
+  ],
+  "output_structure": [
+    "Title — Last Will and Testament",
+    "Testator Declaration",
+    "Revocation Clause",
+    "Executor Appointment",
+    "Asset Distribution",
+    "Specific Bequests",
+    "Residuary Clause",
+    "Testator Signature",
+    "Witness Signatures"
+  ],
+  "retrieval_config": {"statutes": ["Indian Succession Act 1925"], "max_results": 4, "relevance_threshold": 0.6},
+  "prompt_instructions": "Draft a Last Will and Testament under the Indian Succession Act, 1925. Include testator declaration, executor clause, asset distribution, and witness section.",
+  "export_settings": {"formats": ["docx", "pdf", "txt", "markdown"], "font": "Times New Roman", "font_size": 12}
+}

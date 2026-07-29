@@ -1,0 +1,26 @@
+{"event": "opentelemetry_disabled_set_OTEL_ENABLED=true", "level": "info", "timestamp": "2026-07-27T09:48:17.247747Z"}
+INFO:     Started server process [32776]
+INFO:     Waiting for application startup.
+{"database_url": "sqlite+aiosqlite:///./bnsai_te...", "event": "starting_up", "level": "info", "timestamp": "2026-07-27T09:48:17.282308Z"}
+{"event": "database_tables_created", "level": "info", "timestamp": "2026-07-27T09:48:18.094932Z"}
+Anonymized telemetry enabled. See                     https://docs.trychroma.com/telemetry for more information.
+Anonymized telemetry enabled. See                     https://docs.trychroma.com/telemetry for more information.
+Failed to send telemetry event ClientStartEvent: capture() takes 1 positional argument but 3 were given
+{"host": "localhost", "port": 8001, "event": "chroma_client_connected", "level": "info", "timestamp": "2026-07-27T09:48:18.320541Z"}
+{"event": "vector_store_initialized", "level": "info", "timestamp": "2026-07-27T09:48:18.361405Z"}
+{"error": "Couldn't connect to localhost:7687 (resolved to ('[::1]:7687', '127.0.0.1:7687')):\nFailed to establish connection to ResolvedIPv6Address(('::1', 7687, 0, 0)) (reason [WinError 1225] The remote computer refused the network connection)\nFailed to establish connection to ResolvedIPv4Address(('127.0.0.1', 7687)) (reason [WinError 1225] The remote computer refused the network connection)", "event": "knowledge_graph_init_failed", "level": "warning", "timestamp": "2026-07-27T09:48:22.760576Z"}
+{"event": "knowledge_graph_initialized", "level": "info", "timestamp": "2026-07-27T09:48:22.768635Z"}
+{"event": "event_bus_started", "level": "info", "timestamp": "2026-07-27T09:48:22.773645Z"}
+{"event": "event_bus_started", "level": "info", "timestamp": "2026-07-27T09:48:22.774644Z"}
+{"event": "cache_invalidation_wired", "level": "info", "timestamp": "2026-07-27T09:48:22.774644Z"}
+{"event": "cache_invalidation_wired", "level": "info", "timestamp": "2026-07-27T09:48:22.775644Z"}
+{"event": "legal_data_updater_started", "level": "info", "timestamp": "2026-07-27T09:48:22.777645Z"}
+{"interval": 3600, "event": "periodic_update_started", "level": "info", "timestamp": "2026-07-27T09:48:22.778657Z"}
+INFO:     Application startup complete.
+ERROR:    [Errno 10048] error while attempting to bind on address ('0.0.0.0', 8000): only one usage of each socket address (protocol/network address/port) is normally permitted
+INFO:     Waiting for application shutdown.
+{"timeout": 10.0, "event": "shutting_down", "level": "info", "timestamp": "2026-07-27T09:48:22.789025Z"}
+{"event": "event_bus_stopped", "level": "info", "timestamp": "2026-07-27T09:48:22.789025Z"}
+{"event": "event_bus_stopped", "level": "info", "timestamp": "2026-07-27T09:48:22.790014Z"}
+{"event": "shutdown_complete", "level": "info", "timestamp": "2026-07-27T09:48:22.790014Z"}
+INFO:     Application shutdown complete.

@@ -1,0 +1,66 @@
+{
+  "template": "legal_notice",
+  "title": "Legal Notice",
+  "category": "civil",
+  "description": "Send a formal legal notice demanding action or redressal",
+  "version": "1.0",
+  "estimated_time": "5-8 min",
+  "sections": [
+    {
+      "id": "sender",
+      "title": "Sender Details",
+      "description": "Your information",
+      "fields": [
+        {"key": "sender_name", "label": "Full Name", "type": "text", "required": true, "placeholder": "e.g. Amit Singh"},
+        {"key": "sender_father_name", "label": "Father's / Husband's Name", "type": "text", "required": false},
+        {"key": "sender_address", "label": "Address", "type": "textarea", "required": true, "placeholder": "Full address with PIN"},
+        {"key": "sender_email", "label": "Email", "type": "email", "required": false},
+        {"key": "sender_mobile", "label": "Mobile Number", "type": "phone", "required": false},
+        {"key": "advocate_name", "label": "Advocate Name (optional)", "type": "text", "required": false}
+      ]
+    },
+    {
+      "id": "recipient",
+      "title": "Recipient Details",
+      "description": "Who is this notice for?",
+      "fields": [
+        {"key": "recipient_name", "label": "Full Name / Organization", "type": "text", "required": true, "placeholder": "e.g. XYZ Pvt. Ltd."},
+        {"key": "recipient_address", "label": "Address", "type": "textarea", "required": true, "placeholder": "Full address for service"},
+        {"key": "recipient_organization", "label": "Organization (optional)", "type": "text", "required": false}
+      ]
+    },
+    {
+      "id": "notice",
+      "title": "Notice Details",
+      "description": "What is this notice about?",
+      "fields": [
+        {"key": "subject", "label": "Subject of Notice", "type": "select", "required": true, "options": ["Recovery of Money", "Termination of Agreement", "Property Dispute", "Consumer Complaint", "Employment Issue", "Breach of Contract", "Defamation", "Other"], "placeholder": "Select type"},
+        {"key": "subject_custom", "label": "Custom Subject (if Other selected)", "type": "text", "required": false},
+        {"key": "facts", "label": "Complete Facts", "type": "textarea", "required": true, "placeholder": "Describe the complete facts in chronological order...", "validation": {"min_length": 30}},
+        {"key": "incident_date", "label": "Key Date (incident/agreement/etc.)", "type": "date", "required": false},
+        {"key": "agreement_date", "label": "Agreement Date (if applicable)", "type": "date", "required": false},
+        {"key": "payment_date", "label": "Payment / Due Date (if applicable)", "type": "date", "required": false},
+        {"key": "relief_sought", "label": "What do you expect the recipient to do?", "type": "textarea", "required": true, "placeholder": "e.g. Pay outstanding amount of Rs. 50,000 within 15 days; Return possession of property; Stop illegal construction"},
+        {"key": "legal_grounds", "label": "Legal Grounds for Demand", "type": "textarea", "required": false, "placeholder": "e.g. Breach of contract dated 01/01/2024"},
+        {"key": "time_limit_days", "label": "Time Limit for Compliance (days)", "type": "number", "required": false, "default": 15, "validation": {"min": 7, "max": 90}}
+      ]
+    }
+  ],
+  "conditionals": [],
+  "output_structure": [
+    "Advocate Header (if provided)",
+    "Date",
+    "Recipient Address",
+    "Subject",
+    "Introductory Paragraph",
+    "Facts in Chronological Order",
+    "Legal Grounds",
+    "Demand / Relief Sought",
+    "Time Limit for Compliance",
+    "Consequences of Non-Compliance",
+    "Signature"
+  ],
+  "retrieval_config": {"statutes": ["Indian Contract Act 1872", "Specific Relief Act 1963", "CPC 1908"], "max_results": 5, "relevance_threshold": 0.6},
+  "prompt_instructions": "Draft a formal legal notice under Indian law. Use professional legal language. Include all facts chronologically. State the legal grounds clearly. Specify the exact relief demanded and time limit.",
+  "export_settings": {"formats": ["docx", "pdf", "txt", "markdown"], "font": "Times New Roman", "font_size": 12}
+}

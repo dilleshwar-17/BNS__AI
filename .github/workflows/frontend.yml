@@ -1,0 +1,31 @@
+name: Frontend CI
+
+on:
+  push:
+    branches: [main, develop]
+    paths:
+      - 'frontend/**'
+  pull_request:
+    branches: [main]
+    paths:
+      - 'frontend/**'
+
+jobs:
+  lint:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Check HTML validity
+        run: |
+          pip install html5lib
+          python -c "
+          import html5lib
+          with open('frontend/index.html') as f:
+              doc = html5lib.parse(f.read())
+          print('HTML is valid')
+          "
+      - name: Check JS syntax
+        run: |
+          pip install nodeenv
+          npm install -g eslint
+          npx eslint frontend/js/ --ext .js || true

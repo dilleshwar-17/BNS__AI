@@ -1,0 +1,81 @@
+{
+  "template": "agreement",
+  "title": "Agreement / Contract",
+  "category": "civil",
+  "description": "Draft a legally binding agreement under the Indian Contract Act, 1872",
+  "version": "1.0",
+  "estimated_time": "6-10 min",
+  "sections": [
+    {
+      "id": "type",
+      "title": "Agreement Type",
+      "description": "What type of agreement?",
+      "fields": [
+        {"key": "agreement_type", "label": "Type of Agreement", "type": "select", "required": true, "options": ["Sale Agreement", "Rent/Lease Agreement", "Employment Agreement", "Service Agreement", "Partnership Agreement", "NDA", "Loan Agreement", "General Agreement"]}
+      ]
+    },
+    {
+      "id": "parties",
+      "title": "Parties",
+      "description": "Who is entering this agreement?",
+      "fields": [
+        {"key": "party_a_name", "label": "Party A — Full Name / Company", "type": "text", "required": true},
+        {"key": "party_a_address", "label": "Party A — Address", "type": "textarea", "required": true},
+        {"key": "party_b_name", "label": "Party B — Full Name / Company", "type": "text", "required": true},
+        {"key": "party_b_address", "label": "Party B — Address", "type": "textarea", "required": true}
+      ]
+    },
+    {
+      "id": "terms",
+      "title": "Terms of Agreement",
+      "description": "Key commercial and legal terms",
+      "fields": [
+        {"key": "purpose", "label": "Purpose of Agreement", "type": "textarea", "required": true, "placeholder": "Brief description of the agreement's purpose"},
+        {"key": "effective_date", "label": "Effective Date", "type": "date", "required": true},
+        {"key": "duration", "label": "Duration / Term", "type": "text", "required": false, "placeholder": "e.g. 12 months, Indefinite"},
+        {"key": "payment_terms", "label": "Payment / Consideration Terms", "type": "textarea", "required": true, "placeholder": "Amount, schedule, mode of payment"},
+        {"key": "party_a_responsibilities", "label": "Party A — Responsibilities", "type": "textarea", "required": true},
+        {"key": "party_b_responsibilities", "label": "Party B — Responsibilities", "type": "textarea", "required": true},
+        {"key": "confidentiality", "label": "Confidentiality Clause Needed?", "type": "boolean", "required": false, "default": false},
+        {"key": "termination_notice", "label": "Termination Notice Period (days)", "type": "number", "required": false, "default": 30},
+        {"key": "governing_law", "label": "Governing Law", "type": "text", "required": false, "placeholder": "Indian Contract Act, 1872"},
+        {"key": "jurisdiction", "label": "Jurisdiction (City)", "type": "text", "required": false, "placeholder": "e.g. Delhi"}
+      ]
+    }
+  ],
+  "conditionals": [
+    {"field": "agreement_type", "value": "Rent/Lease Agreement", "show_fields": ["rent_property_address", "rent_amount", "security_deposit", "lease_period"]},
+    {"field": "rent_property_address", "label": "Property Address", "type": "textarea", "required": false, "condition": "type_rent"},
+    {"field": "rent_amount", "label": "Monthly Rent (Rs.)", "type": "number", "required": false, "condition": "type_rent"},
+    {"field": "security_deposit", "label": "Security Deposit (Rs.)", "type": "number", "required": false, "condition": "type_rent"},
+    {"field": "lease_period", "label": "Lease Period (months)", "type": "number", "required": false, "condition": "type_rent"},
+    {"field": "agreement_type", "value": "Employment Agreement", "show_fields": ["emp_salary", "emp_working_hours", "emp_leave", "emp_probation"]},
+    {"field": "emp_salary", "label": "Salary (Rs. per month)", "type": "number", "required": false, "condition": "type_employment"},
+    {"field": "emp_working_hours", "label": "Working Hours", "type": "text", "required": false, "condition": "type_employment"},
+    {"field": "emp_leave", "label": "Leave Entitlement", "type": "text", "required": false, "condition": "type_employment"},
+    {"field": "emp_probation", "label": "Probation Period (months)", "type": "number", "required": false, "condition": "type_employment"},
+    {"field": "agreement_type", "value": "Partnership Agreement", "show_fields": ["profit_sharing", "capital_contribution"]},
+    {"field": "profit_sharing", "label": "Profit Sharing Ratio", "type": "text", "required": false, "condition": "type_partnership"},
+    {"field": "capital_contribution", "label": "Capital Contribution (each)", "type": "textarea", "required": false, "condition": "type_partnership"}
+  ],
+  "output_structure": [
+    "Title",
+    "Parties",
+    "Recitals / Whereas Clauses",
+    "Definitions",
+    "Term and Duration",
+    "Payment Terms",
+    "Obligations of Party A",
+    "Obligations of Party B",
+    "Confidentiality (if applicable)",
+    "Termination",
+    "Dispute Resolution",
+    "Governing Law",
+    "Jurisdiction",
+    "Signatures",
+    "Witnesses"
+  ],
+  "retrieval_config": {"statutes": ["Indian Contract Act 1872"], "max_results": 5, "relevance_threshold": 0.6},
+  "prompt_instructions": "Draft a legally binding agreement under the Indian Contract Act, 1872. Include all standard clauses. Use clear, enforceable legal language.",
+  "export_settings": {"formats": ["docx", "pdf", "txt", "markdown"], "font": "Times New Roman", "font_size": 12}
+}

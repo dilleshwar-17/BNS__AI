@@ -1,0 +1,57 @@
+name: Backend CI
+
+on:
+  push:
+    branches: [main, develop]
+    paths:
+      - 'backend/**'
+      - 'requirements.txt'
+      - 'pyproject.toml'
+  pull_request:
+    branches: [main]
+    paths:
+      - 'backend/**'
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:16-alpine
+        env:
+          POSTGRES_DB: bnsai_test
+          POSTGRES_USER: bnsai
+          POSTGRES_PASSWORD: bnsai_test
+        ports:
+          - 5432:5432
+      redis:
+        image: redis:7-alpine
+        ports:
+          - 6379:6379
+
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+          cache: 'pip'
+      - run: pip install -r backend/requirements.txt
+      - run: pip install pytest pytest-asyncio httpx
+      - name: Run tests
+        run: |
+          cd backend
+          python -m pytest app/tests/ -v --tb=short
+        env:
+          DATABASE_URL: postgresql+asyncpg://bnsai:bnsai_test@localhost:5432/bnsai_test
+          REDIS_URL: redis://localhost:6379/0
+          SECRET_KEY: test_secret_key
+
+  lint:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - run: pip install ruff
+      - run: ruff check backend/ --output-format=github

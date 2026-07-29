@@ -1,0 +1,3 @@
+chroma:
+  persist_directory: /data/chroma
+  anonymized_telemetry: false
