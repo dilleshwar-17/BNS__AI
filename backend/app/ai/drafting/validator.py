@@ -6,9 +6,10 @@ logger = get_logger(__name__)
 
 
 class DraftValidator:
-    def validate(self, content: str, draft_type: str) -> dict:
+    def validate(self, content: str, draft_type: str, context: str = "", details: dict = None) -> dict:
         issues = []
         warnings = []
+        hallucinated = False
 
         if not content or len(content.strip()) < 50:
             issues.append("Draft content is too short or empty")
@@ -21,15 +22,41 @@ class DraftValidator:
             if placeholders:
                 warnings.append(f"Contains unfilled placeholders: {', '.join(placeholders[:5])}")
 
-        sections = ["signature", "prayer", "court", "verification"]
-        for s in sections:
-            if s.lower() in content.lower():
-                continue
+        # Programmatic Section Hallucination Prevention
+        section_pattern = r"(?i)(?:section|sec\.?)\s*(\d+[A-Za-z]?)"
+        draft_sections = set(re.findall(section_pattern, content))
+
+        if draft_sections:
+            from app.services.drafting_service import get_draft_template
+            tpl_data = get_draft_template(draft_type)
+            tpl_text = tpl_data["template"] if tpl_data else ""
+
+            allowed_sections = set(re.findall(section_pattern, tpl_text))
+            if context:
+                allowed_sections.update(re.findall(section_pattern, context))
+            if details:
+                allowed_sections.update(re.findall(section_pattern, str(details)))
+
+            for sec in draft_sections:
+                if sec not in allowed_sections:
+                    # Common years / numbers allowed under standard templates
+                    if sec in ["1872", "1955", "2019", "2023", "173", "478", "35", "13", "1", "2", "3"]:
+                        continue
+                    logger.warning(
+                        "hallucinated_section_in_draft_detected",
+                        section=sec,
+                        allowed=list(allowed_sections),
+                    )
+                    issues.append(
+                        f"Hallucinated section reference found in draft: Section {sec}"
+                    )
+                    hallucinated = True
 
         return {
             "valid": len(issues) == 0,
             "issues": issues,
             "warnings": warnings,
+            "hallucinated": hallucinated,
             "sections_found": self._check_sections(content, draft_type),
         }
 
