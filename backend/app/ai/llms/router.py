@@ -164,7 +164,8 @@ class LLMRouter:
         if kb_context:
             system_prompt = (
                 system_prompt
-                + f"\n\n## Retrieved Legal Context\n{kb_context}\n\nUse this context to inform your answer, but prioritize the user's specific query."
+                + f"\n\n## Retrieved Legal Context\n{kb_context}\n\n"
+                "Use this context to inform your answer, but prioritize the user's specific query."
             )
 
         delimited_prompt = self._wrap_with_delimiters(sanitized)
@@ -344,8 +345,7 @@ class LLMRouter:
                             break
                     except __import__("json").JSONDecodeError:
                         continue
-        latency = time.time() - start_time
-        self._record_latency("ollama", latency)
+        self._record_latency("ollama", time.time() - start_time)
 
     def _get_kb_context(self, query: str) -> str:
         kb_path = "data/kb/offline_knowledge_base.json"
@@ -434,9 +434,7 @@ class LLMRouter:
             from app.graph.neo4j import Neo4jManager
 
             manager = Neo4jManager()
-            start_time = time.time()
             result = await manager.search_similar(query, top_k=5)
-            latency = time.time() - start_time
             if result:
                 context = "\n".join([f"- {r.get('name', '')}: {r.get('description', '')}" for r in result])
                 return f"Legal knowledge graph results:\n{context}\n\nQuery: {query}"
@@ -481,7 +479,8 @@ class LLMRouter:
                     if entry.get("citation"):
                         parts.append(f"\n*Citation:* {entry['citation']}")
                     parts.append(
-                        "\n\n*This is general legal information and not legal advice. For specific legal assistance, please consult a qualified lawyer.*"
+                        "\n\n*This is general legal info. "
+                        "Consult a qualified lawyer for specific advice.*"
                     )
                     return "\n\n".join(parts)
             return self._get_fallback_response(query)
@@ -566,7 +565,8 @@ def direct_kb_response(query: str) -> str | None:
             if entry.get("citation"):
                 parts.append(f"\n*Citation:* {entry['citation']}")
             parts.append(
-                "\n\n*This is general legal information and not legal advice. For specific legal assistance, please consult a qualified lawyer.*"
+                "\n\n*This is general legal info. "
+                "Consult a qualified lawyer for specific advice.*"
             )
             return "\n\n".join(parts)
     return None

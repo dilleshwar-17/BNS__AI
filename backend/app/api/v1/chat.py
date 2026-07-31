@@ -6,7 +6,6 @@ from fastapi.responses import StreamingResponse
 from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.ai.llms.router import llm_router
 from app.ai.orchestrator.pipeline import pipeline as ai_pipeline
 from app.api.deps import get_current_user
 from app.core.logging import get_logger, request_id_var
@@ -149,8 +148,7 @@ async def send_message_stream(
     if high:
         raise HTTPException(status_code=400, detail="Message contains prohibited content")
 
-    result = await db.execute(select(Chat).where(Chat.id == chat_id, Chat.user_id == user.id))
-    chat = result.scalar_one_or_none()
+    chat, history = await _get_chat_with_history(chat_id, user.id, db)
     if not chat:
         raise HTTPException(status_code=404, detail="Chat not found")
 

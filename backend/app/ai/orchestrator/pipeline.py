@@ -1,7 +1,7 @@
 import time
 import uuid
 
-from app.ai.llms.router import direct_kb_response, generate_fallback_response, llm_router
+from app.ai.llms.router import direct_kb_response, llm_router
 from app.ai.orchestrator.intent_classifier import IntentClassifier
 from app.ai.validators.output_validator import classify_query, expand_query
 from app.ai.validators.query_validator import query_validator
@@ -277,9 +277,9 @@ class AIOrchestrator:
             return
 
         try:
-            intent = await self.classifier.classify(query)
+            await self.classifier.classify(query)
         except Exception:
-            intent = {"intent": "legal_guidance", "mode": mode}
+            pass
 
         retrieval = {"context": "", "results": []}
         try:
@@ -437,7 +437,11 @@ class AIOrchestrator:
         if kb_result:
             return {"text": kb_result, "provider": "offline_kb_fallback", "from_cache": True}
 
-        return {"text": "I cannot answer this using the currently available BNS knowledge base.", "provider": "fallback", "from_cache": False}
+        return {
+            "text": "I cannot answer this using the currently available BNS knowledge base.",
+            "provider": "fallback",
+            "from_cache": False,
+        }
 
     def _post_process(self, response: str, original_query: str) -> str:
         if not response or len(response) < 10:

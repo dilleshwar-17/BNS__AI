@@ -42,8 +42,14 @@ class DraftValidator:
                     # Common years / numbers allowed under standard templates
                     if sec in ["1872", "1955", "2019", "2023", "173", "478", "35", "13", "1", "2", "3"]:
                         continue
-                    logger.warning("hallucinated_section_in_draft_detected", section=sec, allowed=list(allowed_sections))
-                    issues.append(f"Hallucinated section reference found in draft: Section {sec}")
+                    logger.warning(
+                        "hallucinated_section_in_draft_detected",
+                        section=sec,
+                        allowed=list(allowed_sections),
+                    )
+                    issues.append(
+                        f"Hallucinated section reference found in draft: Section {sec}"
+                    )
                     hallucinated = True
 
         return {

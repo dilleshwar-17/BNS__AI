@@ -1,8 +1,8 @@
 import pytest
-from app.ai.orchestrator.pipeline import pipeline as ai_pipeline
-from app.ai.drafting.validator import DraftValidator
+
 from app.ai.drafting.orchestrator import orchestrator as drafting_orchestrator
-from app.services.drafting_service import generate_draft
+from app.ai.drafting.validator import DraftValidator
+from app.ai.orchestrator.pipeline import pipeline as ai_pipeline
 
 
 @pytest.mark.asyncio
@@ -46,7 +46,9 @@ async def test_draft_validator_catches_hallucination():
 
     # Valid FIR draft (only contains allowed Section 173 BNS / BNSS)
     valid_content = "FIR under Section 173 of BNSS. Name Rajesh Kumar..."
-    validation = validator.validate(valid_content, "fir", context="Section 173 BNSS", details={"complainant_name": "Rajesh"})
+    validation = validator.validate(
+        valid_content, "fir", context="Section 173 BNSS", details={"complainant_name": "Rajesh"}
+    )
     assert validation["valid"] is True
     assert validation["hallucinated"] is False
 
