@@ -25,6 +25,10 @@ const drafting = {
         } catch { return []; }
     },
 
+    async getDocuments() {
+        return this.loadDocuments();
+    },
+
     async generateDraft(draftType, details = {}) {
         api._clearCache();
         return api.post('/drafting/generate', { draft_type: draftType, details });

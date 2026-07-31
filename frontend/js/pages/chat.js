@@ -34,12 +34,15 @@ window.chat = {
     renderSidebar() {
         const list = document.getElementById('chat-list');
         if (!list) return;
-        list.innerHTML = this.chats.map(c => `
-            <div class="chat-item ${c.id === this.currentChatId ? 'active' : ''}" data-chat-id="${c.id}">
-                <div class="chat-item-title">${this.escapeHtml(c.title)}</div>
-                <div class="chat-item-meta">${c.mode} · ${new Date(c.updated_at).toLocaleDateString()}</div>
-            </div>
-        `).join('');
+        list.innerHTML = this.chats.map(c => {
+            const dateStr = c.updated_at ? new Date(c.updated_at).toLocaleDateString() : '';
+            return `
+                <div class="chat-item ${c.id === this.currentChatId ? 'active' : ''}" data-chat-id="${c.id}">
+                    <div class="chat-item-title">${this.escapeHtml(c.title)}</div>
+                    <div class="chat-item-meta">${c.mode} ${dateStr ? '· ' + dateStr : ''}</div>
+                </div>
+            `;
+        }).join('');
         list.querySelectorAll('.chat-item').forEach(el => {
             el.addEventListener('click', () => this.openChat(el.dataset.chatId));
         });
@@ -64,15 +67,18 @@ window.chat = {
             `;
             return;
         }
-        container.innerHTML = messages.map(m => `
-            <div class="message ${m.role}">
-                <div class="message-content">${this.renderMarkdown(m.content)}</div>
-                <div class="message-actions">
-                    <button onclick="chat.copyMessage(this)">Copy</button>
-                    <span style="font-size:11px;color:var(--text-secondary);margin-left:auto;">${new Date(m.created_at).toLocaleTimeString()}</span>
+        container.innerHTML = messages.map(m => {
+            const timeStr = m.created_at ? new Date(m.created_at).toLocaleTimeString() : '';
+            return `
+                <div class="message ${m.role}">
+                    <div class="message-content">${this.renderMarkdown(m.content)}</div>
+                    <div class="message-actions">
+                        <button onclick="chat.copyMessage(this)">Copy</button>
+                        ${timeStr ? `<span style="font-size:11px;color:var(--text-secondary);margin-left:auto;">${timeStr}</span>` : ''}
+                    </div>
                 </div>
-            </div>
-        `).join('');
+            `;
+        }).join('');
         container.scrollTop = container.scrollHeight;
     },
 
@@ -129,8 +135,8 @@ window.chat = {
         const modeSelect = document.getElementById('chat-mode');
         if (!input || !input.value.trim()) return;
         if (!this.currentChatId) {
-            await this.createChat(input.value.slice(0, 50));
-            this.currentChatId = this.chats[0]?.id;
+            const newChat = await this.createChat(input.value.slice(0, 50));
+            this.currentChatId = newChat.id;
         }
         const message = input.value;
         const mode = modeSelect ? modeSelect.value : 'legal_guidance';
