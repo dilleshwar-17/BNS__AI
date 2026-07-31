@@ -7,3 +7,5 @@ const storage = {
     remove(key) { localStorage.removeItem(key); },
     clear() { localStorage.clear(); },
 };
+
+window.storage = storage;

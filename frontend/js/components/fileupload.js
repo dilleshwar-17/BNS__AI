@@ -13,3 +13,5 @@ const fileUpload = {
         toast.show('Upload functionality coming soon');
     },
 };
+
+window.fileUpload = fileUpload;

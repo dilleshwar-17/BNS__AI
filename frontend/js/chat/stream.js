@@ -31,3 +31,5 @@ const chatStream = {
         return { content: fullContent, messageId: null };
     },
 };
+
+window.chatStream = chatStream;

@@ -168,14 +168,16 @@ async def send_message_stream(
         full_content = ""
         assistant_id = str(uuid.uuid4())
 
-        agent_response = await _route_via_agent(body.message, body.mode, user.id)
-        if agent_response and agent_response != body.message:
-            full_content = agent_response
-            yield f"data: {json.dumps({'token': agent_response, 'content': agent_response})}\n\n"
-        else:
-            async for token in llm_router.stream(body.message, body.mode):
+        try:
+            async for token in ai_pipeline.stream_response(
+                body.message, body.mode, user.id, history
+            ):
                 full_content += token
                 yield f"data: {json.dumps({'token': token, 'content': full_content})}\n\n"
+        except Exception as e:
+            logger.error("stream_generation_error", error=str(e))
+            full_content = "I'm unable to process your request at the moment. Please try again."
+            yield f"data: {json.dumps({'token': full_content, 'content': full_content})}\n\n"
 
         try:
             async with async_session_factory() as session:

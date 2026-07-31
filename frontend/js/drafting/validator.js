@@ -5,3 +5,5 @@ const draftValidator = {
         return { valid: missing.length === 0, missing };
     },
 };
+
+window.draftValidator = draftValidator;

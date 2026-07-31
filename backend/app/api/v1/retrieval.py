@@ -11,7 +11,7 @@ pipeline = RetrievalPipeline()
 
 @router.post("/search", response_model=SearchResponse)
 async def search(body: SearchQuery, user: User = Depends(get_current_user)):
-    result = await pipeline.retrieve(body.query, top_k=body.top_k)
+    result = await pipeline.retrieve(body.query, top_k=body.top_k, user_id=user.id)
     results = [
         SearchResult(
             id=r.get("id", ""),

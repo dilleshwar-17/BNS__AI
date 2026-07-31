@@ -7,3 +7,5 @@ const chatBubble = {
         `;
     },
 };
+
+window.chatBubble = chatBubble;

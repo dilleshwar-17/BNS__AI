@@ -15,3 +15,5 @@ const ingestionAPI = {
         return api.get('/ingestion/admin/jobs' + q);
     },
 };
+
+window.ingestionAPI = ingestionAPI;

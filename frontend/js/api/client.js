@@ -50,7 +50,16 @@ window.api = {
         else localStorage.removeItem('refresh_token');
     },
 
-    async _fetchWithTimeout(url, options, timeout = 30000) {
+    _timeoutFor(method, url) {
+        if (method === 'POST') {
+            if (url === '/chat' || url.startsWith('/chat/') || url === '/drafting/generate' || url.startsWith('/drafting/generate')) {
+                return 120000;
+            }
+        }
+        return 60000;
+    },
+
+    async _fetchWithTimeout(url, options, timeout = 60000) {
         const controller = new AbortController();
         const id = setTimeout(() => controller.abort(), timeout);
         options.signal = controller.signal;
@@ -78,7 +87,7 @@ window.api = {
                 method,
                 headers,
                 body: body ? JSON.stringify(body) : undefined,
-            });
+            }, this._timeoutFor(method, url));
             if (resp.status === 401) {
                 const refreshed = await this._tryRefresh();
                 if (refreshed) {
@@ -86,7 +95,7 @@ window.api = {
                     const retryResp = await this._fetchWithTimeout(this.baseUrl + url, {
                         method, headers,
                         body: body ? JSON.stringify(body) : undefined,
-                    });
+                    }, this._timeoutFor(method, url));
                     if (!retryResp.ok) throw await retryResp.json();
                     const data = await retryResp.json();
                     if (method === 'GET') this._setCached(cacheKey, data);

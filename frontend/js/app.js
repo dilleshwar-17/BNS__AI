@@ -6,7 +6,14 @@ window.app = {
             api.setToken(token);
             const rt = localStorage.getItem('refresh_token');
             if (rt) api.setRefreshToken(rt);
-            try { return await window.authAPI.me(); } catch {}
+            try {
+                const me = await window.authAPI.me();
+                if (me) {
+                    this.currentUser = me;
+                    this.updateUI();
+                }
+                return me;
+            } catch (e) {}
         }
         const guestId = 'guest_' + Date.now();
         try {
@@ -22,6 +29,16 @@ window.app = {
                 api.setToken(data.access_token);
                 api.setRefreshToken(data.refresh_token);
             } catch (e) {}
+        }
+        try {
+            const me = await window.authAPI.me();
+            if (me) {
+                this.currentUser = me;
+                this.updateUI();
+            }
+            return me;
+        } catch (e) {
+            return null;
         }
     },
 

@@ -170,7 +170,7 @@ class AIOrchestrator:
         # Step 3: Retrieve context
         try:
             s3 = time.time()
-            retrieval = await self._retrieve(query, mode)
+            retrieval = await self._retrieve(query, mode, user_id)
             steps["retrieval"] = retrieval
             steps["retrieval"]["elapsed"] = round(time.time() - s3, 3)
         except Exception as e:
@@ -241,6 +241,62 @@ class AIOrchestrator:
 
         return result
 
+    async def stream_response(
+        self,
+        query: str,
+        mode: str = "legal_guidance",
+        user_id: str | None = None,
+        chat_history: list | None = None,
+    ):
+        """Run validation → classification → retrieval → prompt build, then stream LLM tokens.
+
+        Yields content tokens live. Falls back to the offline knowledge base or a
+        graceful fallback message when generation fails.
+        """
+        validation = self._validate(query)
+        if validation["rejected"]:
+            yield validation["response"]
+            return
+
+        try:
+            intent = await self.classifier.classify(query)
+        except Exception:
+            intent = {"intent": "legal_guidance", "mode": mode}
+
+        retrieval = {"context": "", "results": []}
+        try:
+            retrieval = await self._retrieve(query, mode, user_id)
+        except Exception as e:
+            logger.warning("stream_retrieval_failed", error=str(e))
+
+        prompt_data = self._build_prompt(query, mode, retrieval.get("context", ""), chat_history)
+        full_prompt = prompt_data.get("full_prompt", query)
+
+        kb_result = direct_kb_response(full_prompt)
+        if kb_result:
+            yield self._post_process(kb_result, query)
+            return
+
+        try:
+            chunks = []
+            async for token in llm_router.stream(full_prompt, mode):
+                chunks.append(token)
+                yield token
+            full = "".join(chunks).strip()
+            if len(full) < 10:
+                kb_result = direct_kb_response(full_prompt)
+                if kb_result:
+                    yield self._post_process(kb_result, query)
+                    return
+                yield self._post_process(generate_fallback_response(query), query)
+        except Exception as e:
+            logger.warning("stream_generation_failed", error=str(e))
+            kb_result = direct_kb_response(full_prompt)
+            if kb_result:
+                yield self._post_process(kb_result, query)
+            else:
+                yield self._post_process(generate_fallback_response(query), query)
+
     def _validate(self, query: str) -> dict:
         is_legal, confidence, reason = query_validator.is_legal_query(query)
 
@@ -268,7 +324,7 @@ class AIOrchestrator:
             "response": None,
         }
 
-    async def _retrieve(self, query: str, mode: str) -> dict:
+    async def _retrieve(self, query: str, mode: str, user_id: str | None = None) -> dict:
         context = ""
         results = []
         strategies_used = []
@@ -285,6 +341,7 @@ class AIOrchestrator:
                 query=query,
                 query_info={"type": classified_type, "sections": expanded.get("sections", [])},
                 top_k=8,
+                user_id=user_id,
             )
 
             context = retrieval_result.get("context", "")

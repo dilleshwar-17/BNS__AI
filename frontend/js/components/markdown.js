@@ -21,3 +21,5 @@ const markdown = {
         return d.innerHTML;
     },
 };
+
+window.markdown = markdown;

@@ -144,83 +144,97 @@ class IngestionService:
         return chunks
 
     async def _get_embeddings_batch(self, texts: list[str]) -> list[list[float]]:
-        try:
-            from app.integrations.ollama import get_ollama_client
+        """Generate embeddings for a batch of texts.
 
-            client = get_ollama_client()
-            resp = await client.post(
-                "/api/embed",
-                json={"model": "nomic-embed-text", "input": texts},
-            )
-            resp.raise_for_status()
-            return resp.json()["embeddings"]
-        except Exception as e:
-            logger.warning("ollama_embedding_failed_falling_back", error=str(e))
-            return [self._fake_embedding(t) for t in texts]
+        Retries once on transient failures, then raises a ValueError so the
+        ingestion job fails cleanly instead of silently corrupting the vector
+        store with deterministic md5-hash embeddings.
+        """
+        from app.integrations.ollama import get_ollama_client
 
-    def _fake_embedding(self, text: str) -> list[float]:
-        import hashlib
+        client = get_ollama_client()
+        last_error: Exception | None = None
 
-        h = hashlib.md5(text.encode()).digest()
-        vec = [b / 255.0 for b in h]
-        vec = vec * 6
-        return vec[:64]
+        for attempt in (1, 2):
+            try:
+                resp = await client.post(
+                    "/api/embed",
+                    json={"model": "nomic-embed-text", "input": texts},
+                )
+                resp.raise_for_status()
+                data = resp.json()
+                embeddings = data.get("embeddings") or data.get("data") or []
+                if not embeddings:
+                    raise ValueError("Ollama returned no embeddings")
+                return embeddings
+
+            except Exception as e:  # noqa: BLE001
+                last_error = e
+                logger.warning("ollama_embedding_attempt_failed", attempt=attempt, error=str(e))
+
+        raise ValueError(
+            "Embedding generation failed after retries. Ollama is unavailable or the "
+            "'nomic-embed-text' model is not installed. Run: ollama pull nomic-embed-text. "
+            f"Last error: {last_error}"
+        )
 
     async def _store_in_vector_store(self, chunks: list[dict], collection_name: str, job: IngestionJob):
         try:
-            import chromadb
+            from app.ingestion.chroma.vector_store import _get_client as get_chroma_client
+            import asyncio
 
-            client = chromadb.HttpClient(
-                host=settings.chroma_host,
-                port=settings.chroma_port,
-                headers={"Authorization": f"Bearer {settings.chroma_token}"},
-            )
-            try:
-                collection = client.get_collection(collection_name)
-            except Exception:
-                collection = client.create_collection(collection_name)
+            def sync_store():
+                client = get_chroma_client()
+                try:
+                    collection = client.get_collection(collection_name)
+                except Exception:
+                    collection = client.create_collection(collection_name)
 
-            existing_ids = set()
-            try:
-                existing = collection.get(limit=10000)
-                if existing and existing["ids"]:
-                    existing_ids = set(existing["ids"])
-            except Exception:
-                pass
+                existing_ids = set()
+                try:
+                    existing = collection.get(limit=10000)
+                    if existing and existing["ids"]:
+                        existing_ids = set(existing["ids"])
+                except Exception:
+                    pass
 
-            texts = []
-            embeddings = []
-            ids = []
-            metadatas = []
-            new_count = 0
+                texts = []
+                embeddings = []
+                ids = []
+                metadatas = []
+                new_count = 0
 
-            for chunk in chunks:
-                cid = chunk["id"]
-                if cid in existing_ids:
-                    continue
-                texts.append(chunk["text"])
-                embeddings.append(chunk.get("embedding", []))
-                ids.append(cid)
-                metadatas.append(
-                    {
-                        **chunk.get("metadata", {}),
-                        "source_file": job.filename,
-                        "job_id": job.id,
-                    }
-                )
-                new_count += 1
-
-            if new_count > 0:
-                batch_size = 50
-                for i in range(0, new_count, batch_size):
-                    end = i + batch_size
-                    collection.add(
-                        documents=texts[i:end],
-                        embeddings=embeddings[i:end],
-                        ids=ids[i:end],
-                        metadatas=metadatas[i:end],
+                for chunk in chunks:
+                    cid = chunk["id"]
+                    if cid in existing_ids:
+                        continue
+                    texts.append(chunk["text"])
+                    embeddings.append(chunk.get("embedding", []))
+                    ids.append(cid)
+                    metadatas.append(
+                        {
+                            **chunk.get("metadata", {}),
+                            "source_file": job.filename,
+                            "job_id": job.id,
+                            "user_id": job.user_id,
+                        }
                     )
+                    new_count += 1
 
+                if new_count > 0:
+                    batch_size = 50
+                    for i in range(0, new_count, batch_size):
+                        end = i + batch_size
+                        collection.add(
+                            documents=texts[i:end],
+                            embeddings=embeddings[i:end],
+                            ids=ids[i:end],
+                            metadatas=metadatas[i:end],
+                        )
+                return new_count
+
+            loop = asyncio.get_event_loop()
+            new_count = await loop.run_in_executor(None, sync_store)
             logger.info("vector_store_populated", collection=collection_name, new=new_count, total=len(chunks))
         except Exception as e:
             logger.warning("vector_store_upload_failed", error=str(e))

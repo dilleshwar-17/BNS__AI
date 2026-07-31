@@ -14,3 +14,5 @@ const chatMessages = {
         `).join('');
     },
 };
+
+window.chatMessages = chatMessages;

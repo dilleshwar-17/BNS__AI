@@ -9,3 +9,5 @@ const formatter = {
         return `${this.date(dateStr)} ${this.time(dateStr)}`;
     },
 };
+
+window.formatter = formatter;

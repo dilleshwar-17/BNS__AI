@@ -11,3 +11,5 @@ const chatHistory = {
         `).join('');
     },
 };
+
+window.chatHistory = chatHistory;

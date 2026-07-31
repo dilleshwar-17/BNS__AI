@@ -5,3 +5,5 @@ const chatAPI = {
     send(chatId, message, mode) { return api.post(`/chat/${chatId}`, { message, mode }); },
     delete(chatId) { return api.del(`/chat/${chatId}`); },
 };
+
+window.chatAPI = chatAPI;

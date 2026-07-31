@@ -13,3 +13,5 @@ const chatModes = {
         return this.list.map(m => `<option value="${m.value}" ${m.value === selected ? 'selected' : ''}>${m.label}</option>`).join('');
     },
 };
+
+window.chatModes = chatModes;

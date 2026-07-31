@@ -319,3 +319,5 @@ const adminKnowledge = {
         return parseFloat((bytes / Math.pow(k, i)).toFixed(1)) + ' ' + sizes[i];
     },
 };
+
+window.adminKnowledge = adminKnowledge;

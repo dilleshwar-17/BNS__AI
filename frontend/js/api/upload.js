@@ -32,3 +32,5 @@ const uploadAPI = {
         });
     },
 };
+
+window.uploadAPI = uploadAPI;

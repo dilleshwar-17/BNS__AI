@@ -22,3 +22,5 @@ const draftingQuestionnaire = {
         return values;
     },
 };
+
+window.draftingQuestionnaire = draftingQuestionnaire;

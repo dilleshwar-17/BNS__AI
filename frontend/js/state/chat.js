@@ -5,3 +5,5 @@ const chatState = {
     setChats(chats) { this.chats = chats; },
     getChat(id) { return this.chats.find(c => c.id === id); },
 };
+
+window.chatState = chatState;

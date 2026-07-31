@@ -14,3 +14,5 @@ const documentsAPI = {
         return api.get('/documents/admin/all' + q);
     },
 };
+
+window.documentsAPI = documentsAPI;

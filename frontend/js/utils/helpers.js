@@ -12,3 +12,5 @@ const frontendHelpers = {
         return d.innerHTML;
     },
 };
+
+window.frontendHelpers = frontendHelpers;

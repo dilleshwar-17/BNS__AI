@@ -9,3 +9,5 @@ const toast = {
         setTimeout(() => t.remove(), duration);
     },
 };
+
+window.toast = toast;

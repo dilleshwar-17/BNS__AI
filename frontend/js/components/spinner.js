@@ -6,3 +6,5 @@ const spinner = {
         if (container) container.innerHTML = `<div class="loading-screen">${this.render()}<p>Loading...</p></div>`;
     },
 };
+
+window.spinner = spinner;

@@ -6,3 +6,5 @@ const draftingAPI = {
     getDocument(id) { return api.get(`/drafting/documents/${id}`); },
     deleteDocument(id) { return api.del(`/drafting/documents/${id}`); },
 };
+
+window.draftingAPI = draftingAPI;

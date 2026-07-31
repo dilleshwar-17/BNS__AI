@@ -8,3 +8,5 @@ const downloadUtils = {
         URL.revokeObjectURL(a.href);
     },
 };
+
+window.downloadUtils = downloadUtils;
