@@ -46,7 +46,13 @@ class DraftingOrchestrator:
                 content = fallback_gen(draft_type, details) or ""
 
             logger.info("draft_pipeline_validate_output", draft_type=draft_type, step="validate_output")
-            validation = self.validator.validate(content, draft_type)
+            validation = self.validator.validate(content, draft_type, legal_context, details)
+
+            if not validation.get("valid", True) or validation.get("hallucinated", False):
+                logger.warning("ai_draft_invalid_or_hallucinated_falling_back", draft_type=draft_type, issues=validation.get("issues"))
+                from app.services.drafting_service import generate_draft as fallback_gen
+                content = fallback_gen(draft_type, details) or ""
+                validation = self.validator.validate(content, draft_type, legal_context, details)
 
             logger.info("draft_pipeline_format", draft_type=draft_type, step="format")
             formatted = self.formatter.format(content, draft_type)

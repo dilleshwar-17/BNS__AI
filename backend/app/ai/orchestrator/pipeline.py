@@ -177,10 +177,22 @@ class AIOrchestrator:
             logger.warning("retrieval_failed", error=str(e))
             steps["retrieval"] = {"context": "", "results": [], "error": str(e)}
 
+        context_str = steps["retrieval"].get("context", "")
+
+        # Retrieval First: If query is legal and context is completely empty, decline to answer
+        from app.ai.validators.query_validator import query_validator
+        is_legal, confidence, reason = query_validator.is_legal_query(query)
+        greeting = query.lower().strip() in ["hi", "hello", "hey", "namaste", "namaskar", "greetings"]
+        if is_legal and not greeting and not context_str.strip():
+            result["response"] = "I cannot answer this using the currently available BNS knowledge base."
+            result["confidence"] = confidence
+            result["elapsed_seconds"] = round(time.time() - start_time, 3)
+            return result
+
         # Step 4: Build prompt
         try:
             s4 = time.time()
-            prompt_data = self._build_prompt(query, mode, steps["retrieval"].get("context", ""), chat_history)
+            prompt_data = self._build_prompt(query, mode, context_str, chat_history)
             steps["prompt"] = prompt_data
             steps["prompt"]["elapsed"] = round(time.time() - s4, 3)
         except Exception as e:
@@ -197,7 +209,7 @@ class AIOrchestrator:
             result["provider"] = response.get("provider", "unknown")
         except Exception as e:
             logger.error("generation_failed", error=str(e))
-            result["response"] = generate_fallback_response(query)
+            result["response"] = "I cannot answer this using the currently available BNS knowledge base."
             steps["generation"] = {"error": str(e), "fallback": True}
 
         # Step 6: Post-process
@@ -207,6 +219,12 @@ class AIOrchestrator:
             steps["post_processing"] = {"elapsed": round(time.time() - s6, 3)}
         except Exception as e:
             logger.warning("post_process_failed", error=str(e))
+
+        # Step 7: Output Validation
+        try:
+            result["response"] = self._validate_output(result["response"], query, context_str)
+        except Exception as e:
+            logger.warning("output_validation_failed", error=str(e))
 
         # Build sources list
         sources = []
@@ -269,7 +287,17 @@ class AIOrchestrator:
         except Exception as e:
             logger.warning("stream_retrieval_failed", error=str(e))
 
-        prompt_data = self._build_prompt(query, mode, retrieval.get("context", ""), chat_history)
+        context_str = retrieval.get("context", "")
+
+        # Retrieval First: If query is legal and context is completely empty, decline to answer
+        from app.ai.validators.query_validator import query_validator
+        is_legal, confidence, reason = query_validator.is_legal_query(query)
+        greeting = query.lower().strip() in ["hi", "hello", "hey", "namaste", "namaskar", "greetings"]
+        if is_legal and not greeting and not context_str.strip():
+            yield "I cannot answer this using the currently available BNS knowledge base."
+            return
+
+        prompt_data = self._build_prompt(query, mode, context_str, chat_history)
         full_prompt = prompt_data.get("full_prompt", query)
 
         kb_result = direct_kb_response(full_prompt)
@@ -283,19 +311,17 @@ class AIOrchestrator:
                 chunks.append(token)
                 yield token
             full = "".join(chunks).strip()
-            if len(full) < 10:
-                kb_result = direct_kb_response(full_prompt)
-                if kb_result:
-                    yield self._post_process(kb_result, query)
-                    return
-                yield self._post_process(generate_fallback_response(query), query)
+            # If the streamed output fails output validation, yield fallback message
+            validated = self._validate_output(full, query, context_str)
+            if validated != full:
+                yield "\n\nI cannot answer this using the currently available BNS knowledge base."
         except Exception as e:
             logger.warning("stream_generation_failed", error=str(e))
             kb_result = direct_kb_response(full_prompt)
             if kb_result:
                 yield self._post_process(kb_result, query)
             else:
-                yield self._post_process(generate_fallback_response(query), query)
+                yield "I cannot answer this using the currently available BNS knowledge base."
 
     def _validate(self, query: str) -> dict:
         is_legal, confidence, reason = query_validator.is_legal_query(query)
@@ -411,7 +437,7 @@ class AIOrchestrator:
         if kb_result:
             return {"text": kb_result, "provider": "offline_kb_fallback", "from_cache": True}
 
-        return {"text": generate_fallback_response(prompt), "provider": "fallback", "from_cache": False}
+        return {"text": "I cannot answer this using the currently available BNS knowledge base.", "provider": "fallback", "from_cache": False}
 
     def _post_process(self, response: str, original_query: str) -> str:
         if not response or len(response) < 10:
@@ -438,6 +464,43 @@ class AIOrchestrator:
             .replace("Evidence Act", "BSA"),
             response,
         )
+
+        return response
+
+    def _validate_output(self, response: str, query: str, context: str) -> str:
+        # If response is empty or extremely short
+        if not response or len(response.strip()) < 10:
+            return "I cannot answer this using the currently available BNS knowledge base."
+
+        # If response indicates inability to answer, replace with exact fallback
+        decline_phrases = [
+            "cannot answer", "don't know", "do not know", "unable to answer", "no information available",
+            "not found in the retrieved", "insufficient information", "do not have enough information",
+            "apologize, but I", "unavailable", "cannot fulfill", "cannot provide",
+            "not mentioned in the retrieved context", "not present in the retrieved context",
+            "not directly mentioned", "not explicitly mentioned"
+        ]
+        response_lower = response.lower()
+        if any(p in response_lower for p in decline_phrases):
+            return "I cannot answer this using the currently available BNS knowledge base."
+
+        # Programmatic Section Hallucination Prevention
+        import re
+        section_pattern = r"(?i)(?:section|sec\.?)\s*(\d+[A-Za-z]?)"
+        response_sections = set(re.findall(section_pattern, response))
+
+        if response_sections:
+            context_sections = set(re.findall(section_pattern, context))
+            query_sections = set(re.findall(section_pattern, query))
+            allowed_sections = context_sections.union(query_sections)
+
+            for sec in response_sections:
+                if sec not in allowed_sections:
+                    # Exclude common years or numbers under 3 which are likely not hallucinated sections
+                    if sec in ["1872", "1955", "2019", "2023", "1", "2", "3"]:
+                        continue
+                    logger.warning("hallucinated_section_detected", section=sec, allowed=list(allowed_sections))
+                    return "I cannot answer this using the currently available BNS knowledge base."
 
         return response
 

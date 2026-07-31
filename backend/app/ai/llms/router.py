@@ -198,7 +198,7 @@ class LLMRouter:
                 logger.warning("provider_failed", provider=provider, error=str(e))
 
         logger.error("all_providers_failed", last_error=str(last_error))
-        return "I apologize, but I'm unable to process your request at the moment. Please try again later."
+        return "I cannot answer this using the currently available BNS knowledge base."
 
     async def stream(self, prompt: str, mode: str = "general", **kwargs) -> AsyncIterator[str]:
         await self.health_check()
@@ -239,7 +239,7 @@ class LLMRouter:
             full_response = await self.route(prompt, mode, **kwargs)
             yield full_response
         except Exception:
-            yield "I apologize, but I'm unable to process your streaming request at the moment."
+            yield "I cannot answer this using the currently available BNS knowledge base."
 
     def _sanitize_user_input(self, text: str) -> str:
         injection_patterns = [
@@ -489,12 +489,7 @@ class LLMRouter:
             return self._get_fallback_response(query)
 
     def _get_fallback_response(self, query: str) -> str:
-        return (
-            f"I can provide general legal information based on the Bharatiya Nyaya Sanhita (BNS), "
-            f"Bharatiya Nagarik Suraksha Sanhita (BNSS), and Bharatiya Sakshya Adhiniyam (BSA). "
-            f"Regarding your query about '{query[:100]}...', please note that this is general legal "
-            f"information and not legal advice. For specific legal assistance, please consult a qualified lawyer."
-        )
+        return "I cannot answer this using the currently available BNS knowledge base."
 
     def _record_latency(self, provider: str, latency: float):
         self._latency[provider].append(latency)
@@ -578,12 +573,7 @@ def direct_kb_response(query: str) -> str | None:
 
 
 def generate_fallback_response(query: str) -> str:
-    return (
-        f"I can provide general legal information based on the Bharatiya Nyaya Sanhita (BNS), "
-        f"Bharatiya Nagarik Suraksha Sanhita (BNSS), and Bharatiya Sakshya Adhiniyam (BSA). "
-        f"Regarding your query about '{query[:100]}...', please note that this is general legal "
-        f"information and not legal advice. For specific legal assistance, please consult a qualified lawyer."
-    )
+    return "I cannot answer this using the currently available BNS knowledge base."
 
 
 async def process_with_llm(prompt: str, context: dict = None) -> str:
