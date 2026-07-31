@@ -51,17 +51,43 @@ window.chat = {
         return d.innerHTML;
     },
 
+    renderGreeting() {
+        return `
+            <div class="chat-empty reveal">
+                <div class="empty-icon">⚖️</div>
+                <div class="greeting-content">
+                    <p class="greeting-title">Hello! I'm BNS AI 👋</p>
+                    <p>Your AI-powered legal assistant for Indian law. I can help you with:</p>
+                    <ul>
+                        <li><strong>Legal Guidance</strong> — clear answers citing BNS, BNSS &amp; BSA sections</li>
+                        <li><strong>Document Drafting</strong> — FIRs, bail applications, legal notices, affidavits &amp; more</li>
+                        <li><strong>Section Lookup</strong> — instant section text, punishment &amp; procedure</li>
+                        <li><strong>Legal Procedure</strong> — step-by-step criminal procedure guidance</li>
+                    </ul>
+                    <p>Type a question below or pick a suggestion to get started!</p>
+                </div>
+                <div class="greeting-chips">
+                    <button class="btn btn-outline btn-sm" onclick="chat.fillGreeting(this)">What is the punishment for theft under BNS?</button>
+                    <button class="btn btn-outline btn-sm" onclick="chat.fillGreeting(this)">How to file a bail application?</button>
+                    <button class="btn btn-outline btn-sm" onclick="chat.fillGreeting(this)">Draft a legal notice</button>
+                </div>
+            </div>
+        `;
+    },
+
+    fillGreeting(btn) {
+        const input = document.getElementById('chat-input');
+        if (input) {
+            input.value = btn.textContent.trim();
+            input.focus();
+        }
+    },
+
     renderMessages(messages) {
         const container = document.getElementById('chat-messages');
         if (!container) return;
         if (!messages || messages.length === 0) {
-            container.innerHTML = `
-                <div class="chat-empty">
-                    <div class="empty-icon">⚖️</div>
-                    <p>Start a conversation with BNS AI</p>
-                    <p style="font-size:13px;">Ask about Indian law, legal procedures, or draft documents</p>
-                </div>
-            `;
+            container.innerHTML = this.renderGreeting();
             return;
         }
         container.innerHTML = messages.map(m => `

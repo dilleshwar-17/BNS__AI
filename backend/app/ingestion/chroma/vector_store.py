@@ -115,3 +115,12 @@ def get_collection():
 
 def get_client():
     return _client
+
+
+def is_healthy() -> bool:
+    try:
+        client = _get_client()
+        client.heartbeat()
+        return True
+    except Exception:
+        return False

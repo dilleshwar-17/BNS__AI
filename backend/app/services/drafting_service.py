@@ -1,3 +1,5 @@
+import re
+
 from app.core.logging import get_logger
 
 logger = get_logger(__name__)
@@ -84,7 +86,7 @@ To,
 [Address]
 [City, State, PIN]
 
-SUBJECT: LEGAL NOTICE UNDER SECTION ________
+SUBJECT: ________________
 
 Dear Sir/Madam,
 
@@ -502,68 +504,68 @@ FIELD_BLANK_MAP: dict[str, dict[str, str]] = {
         "police_station": "Police Station: ________________",
         "district": "District: ________________",
         "suspected_offence": "_______________________________________________________________\n_______________________________________________________________\n_______________________________________________________________",
+        "property_type": "PROPERTY TAKEN/DAMAGED (if applicable):\n_______________________________________________________________",
+        "property_value": "Value: Rs. _______________",
+        "witness_name": "1. Name: ____________________",
+        "witness_address": "Address: ___________________________",
     },
     "legal_notice": {
         "sender_name": "From:\n[Name]",
+        "sender_father_name": "son/daughter of ______________________________",
         "sender_address": "[Address]",
-        "sender_city": "[City, State, PIN]",
+        "advocate_name": "__________________\n(Seal/Stamp of Advocate, if applicable)",
         "recipient_name": "To,\n[Name]",
         "recipient_address": "[Address]",
-        "recipient_city": "[City, State, PIN]",
-        "subject_section": "SUBJECT: LEGAL NOTICE UNDER SECTION ________",
-        "sender_full_name": "I, ______________________________",
-        "father_name": "son/daughter of ______________________________",
-        "sender_address_detail": "resident of ______________________________",
-        "notice_details_1": "1. ________________________________________________________________",
-        "notice_details_2": "2. ________________________________________________________________",
-        "notice_details_3": "3. ________________________________________________________________",
-        "demand": "That you are hereby called upon to ______________________________",
-        "days_to_comply": "within __________ days",
+        "subject": "SUBJECT: ________________",
+        "facts": "1. ________________________________________________________________\n2. ________________________________________________________________\n3. ________________________________________________________________",
+        "relief_sought": "That you are hereby called upon to ______________________________",
+        "time_limit_days": "within __________ days",
     },
     "bail_application": {
         "court_name": "IN THE COURT OF ______________________________",
         "case_no": "Case No: ______________________________",
-        "fir_no": "FIR No: ______________________________",
+        "fir_number": "FIR No: ______________________________",
         "police_station": "Police Station: ______________________________",
-        "accused_name": "namely ______________________________",
+        "applicant_name": "namely ______________________________",
         "father_name": "son of ______________________________",
         "age": "aged about ____ years",
         "address": "resident of ______________________________",
-        "custody_date": "since ______/______/______",
+        "arrest_date": "since ______/______/______",
     },
     "affidavit": {
         "deponent_name": "I, ______________________________",
-        "father_husband_name": "son/daughter/wife of ______________________________",
+        "father_name": "son/daughter/wife of ______________________________",
         "age": "aged about ____ years",
         "occupation": "by occupation ______________________________",
         "address": "resident of ______________________________",
+        "declaration_1": "1. ______________________________",
+        "declaration_2": "2. ______________________________",
+        "declaration_3": "3. ______________________________",
+        "declaration_4": "4. ______________________________",
+        "declaration_5": "5. ______________________________",
+        "place": "Verified at ________________",
+        "oath_commissioner": "__________________\n(Oath Commissioner / Notary Public)",
     },
     "consumer_complaint": {
-        "forum": "BEFORE THE HON'BLE ______________________________ CONSUMER DISPUTES REDRESSAL COMMISSION",
         "complainant_name": "[Name of Complainant]",
         "complainant_address": "[Address]",
-        "complainant_city": "[City, State, PIN]",
-        "opposite_party_name": "[Name of Opposite Party]",
-        "opposite_party_address": "[Address]",
-        "opposite_party_city": "[City, State, PIN]",
-        "opposite_party_business": "The opposite party is engaged in the business of ______________________________",
+        "opposite_party": "[Name of Opposite Party]",
+        "opposite_address": "[Address]",
+        "product_service": "The opposite party is engaged in the business of ______________________________",
         "purchase_date": "on ______/______/______",
-        "invoice_no": "vide invoice/receipt no. ________________",
-        "consideration": "for a consideration of Rs. _______________",
-        "deficiency": "deficiency in service/defect in goods as follows:\n   _______________________________________________________________\n   _______________________________________________________________",
-        "prayer_direction": "Direct the opposite party to ______________________________",
-        "compensation": "Award compensation of Rs. _______________",
+        "invoice_number": "vide invoice/receipt no. ________________",
+        "price_paid": "for a consideration of Rs. _______________",
+        "defect_details": "deficiency in service/defect in goods as follows:\n   _______________________________________________________________\n   _______________________________________________________________",
+        "relief_requested": "Direct the opposite party to ______________________________",
     },
     "agreement": {
         "party_a_name": '[Name], son/daughter of ________________, aged ______ years, resident of ______________________________ (hereinafter called "Party A")',
         "party_b_name": '[Name], son/daughter of ________________, aged ______ years, resident of ______________________________ (hereinafter called "Party B")',
-        "recital_a": "A. _______________________________________________________________",
-        "recital_b": "B. _______________________________________________________________",
-        "recital_c": "C. _______________________________________________________________",
-        "start_date": "from ______/______/______",
-        "end_date": "to ______/______/______",
-        "consideration_amount": "Rs. _______________",
-        "consideration_words": "(Rupees ________________________________ only)",
+        "purpose": "A. _______________________________________________________________",
+        "effective_date": "on this ______ day of ____________, ______",
+        "payment_terms": "a sum of Rs. _______________",
+        "party_a_responsibilities": "3. **OBLIGATIONS OF PARTY A:**\n   _______________________________________________________________",
+        "party_b_responsibilities": "4. **OBLIGATIONS OF PARTY B:**\n   _______________________________________________________________",
         "termination_notice": "giving ____ days' written notice",
         "jurisdiction": "The courts at ________________",
     },
@@ -571,55 +573,62 @@ FIELD_BLANK_MAP: dict[str, dict[str, str]] = {
         "court_name": "IN THE COURT OF ______________________________",
         "plaintiff_name": "[Name of Plaintiff]",
         "plaintiff_address": "[Address]",
-        "plaintiff_city": "[City, State, PIN]",
         "defendant_name": "[Name of Defendant]",
         "defendant_address": "[Address]",
-        "defendant_city": "[City, State, PIN]",
         "suit_type": "SUIT FOR ______________________________",
-        "plaintiff_description": "The plaintiff is the ________________",
-        "defendant_description": "The defendant is ______________________________",
-        "cause_of_action_date": "on ______/______/______",
-        "cause_of_action_place": "at ________________",
-        "cause_of_action_detail": "when ______________________________",
-        "suit_value": "Rs. _______________",
+        "facts": "when ______________________________",
+        "cause_date": "on ______/______/______",
+        "cause_place": "at ________________",
+        "court_fee_value": "The value of the suit for the purpose of court fees and jurisdiction is Rs. _______________",
+        "relief_sought": "a) Decree the suit in favor of the plaintiff",
     },
     "divorce_petition": {
-        "court_name": "IN THE FAMILY COURT AT ______________________________",
         "petitioner_name": "[Name of Petitioner]",
         "petitioner_address": "[Address]",
-        "petitioner_city": "[City, State, PIN]",
         "respondent_name": "[Name of Respondent]",
         "respondent_address": "[Address]",
-        "respondent_city": "[City, State, PIN]",
         "marriage_date": "on ______/______/______",
         "marriage_place": "at ________________",
-        "lived_together_at": "lived together at ________________",
-        "ground_a": "(a) ______________________________________________________________",
-        "ground_b": "(b) ______________________________________________________________",
-        "ground_c": "(c) ______________________________________________________________",
+        "last_residence": "lived together at ________________",
+        "ground_details": "(a) ______________________________________________________________",
+        "relief": "a) Pass a decree of divorce dissolving the marriage",
     },
     "will": {
         "testator_name": "I, ______________________________",
-        "father_husband_name": "son/daughter/wife of ______________________________",
-        "age": "aged about ____ years",
-        "address": "resident of ______________________________",
+        "testator_father_name": "son/daughter/wife of ______________________________",
+        "testator_age": "aged about ____ years",
+        "testator_address": "resident of ______________________________",
         "executor_name": "I appoint ______________________________",
-        "executor_father": "son/daughter of ______________________________",
         "executor_address": "resident of ______________________________",
-        "immovable_property_1": "1. ______________________________ - to ______________________________",
-        "immovable_property_2": "2. ______________________________ - to ______________________________",
-        "movable_property_1": "1. ______________________________ - to ______________________________",
-        "movable_property_2": "2. ______________________________ - to ______________________________",
-        "bank_investments": "1. ______________________________ - to ______________________________",
-        "will_date": "on this ______ day of ____________, ______",
-        "will_place": "at ________________",
+        "immovable_property": "      1. ______________________________ - to ______________________________\n      2. ______________________________ - to ______________________________",
+        "movable_property": "      1. ______________________________ - to ______________________________\n      2. ______________________________ - to ______________________________",
+        "bank_accounts": "      1. ______________________________ - to ______________________________",
+        "witness_1_name": "1. Name: ______________________________",
+        "witness_1_address": "Address: ______________________________",
+        "witness_2_name": "2. Name: ______________________________",
+        "witness_2_address": "Address: ______________________________",
     },
 }
 
 
-def _fill_blanks(content: str, draft_type: str, details: dict) -> str:
-    import re
+def _fill_runs(fragment: str, value: str) -> str:
+    runs = re.findall(r"_+", fragment)
+    if not runs:
+        return fragment
+    if len(runs) == 1:
+        return re.sub(r"_+", lambda m: value, fragment, count=1)
 
+    if re.fullmatch(r"\d{4}[-/]\d{1,2}[-/]\d{1,2}", value):
+        parts = re.split(r"[-/]", value)
+        segments = re.split(r"_+", fragment)
+        separators = segments[1:-1]
+        if len(parts) == len(runs) and all(re.fullmatch(r"[\/\-\s]*", s) for s in separators):
+            return re.sub(r"_+", lambda m: parts.pop(0), fragment)
+
+    return re.sub(r"_+", lambda m: value, fragment, count=1)
+
+
+def _fill_blanks(content: str, draft_type: str, details: dict) -> str:
     field_map = FIELD_BLANK_MAP.get(draft_type, {})
     if not field_map:
         return content
@@ -627,22 +636,28 @@ def _fill_blanks(content: str, draft_type: str, details: dict) -> str:
     lines = content.split("\n")
 
     for key, value in details.items():
-        if not value:
+        str_val = str(value).strip()
+        if not str_val:
             continue
-        str_val = str(value)
         blank_pattern = field_map.get(key)
         if not blank_pattern:
             continue
 
+        if "\n" in blank_pattern and "\n" in str_val:
+            filled = str_val
+        elif "_" not in blank_pattern:
+            filled = str_val
+        else:
+            filled = _fill_runs(blank_pattern, str_val)
+
         if blank_pattern in content:
-            filled = re.sub(r"_+", str_val, blank_pattern, count=1)
             content = content.replace(blank_pattern, filled, 1)
             lines = content.split("\n")
             continue
 
         for i, line in enumerate(lines):
             if blank_pattern in line:
-                lines[i] = re.sub(r"_+", str_val, line, count=1)
+                lines[i] = line.replace(blank_pattern, filled, 1)
                 break
 
     return "\n".join(lines)

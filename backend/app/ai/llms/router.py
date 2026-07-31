@@ -1,3 +1,4 @@
+import random
 import time
 from typing import AsyncIterator, Optional
 
@@ -13,11 +14,22 @@ OLLAMA_BASE_URL = "http://localhost:11434"
 OLLAMA_MODEL = "llama3.2:3b"
 GEMINI_BASE_URL = "https://generativelanguage.googleapis.com/v1beta"
 
+GEMINI_TRAFFIC_PERCENT = 0.055
+
 DELIMITER_START = "<|user_message|>"
 DELIMITER_END = "<|/user_message|>"
 
 REQUEST_TIMEOUT = 60.0
 HEALTH_CHECK_INTERVAL = 60.0
+
+SKIP_VALIDATION_MODES = {
+    "legal_drafting",
+    "document_analysis",
+    "legal_analysis",
+    "case_strategy",
+    "compliance",
+    "precedent_search",
+}
 
 
 class CircuitBreaker:
@@ -70,10 +82,9 @@ class LLMRouter:
             return
         self._last_health_check = time.time()
         try:
-            from app.ingestion.chroma.vector_store import get_vector_store
+            from app.ingestion.chroma.vector_store import is_healthy
 
-            vs = get_vector_store()
-            self._health["vector"] = vs.health_check()
+            self._health["vector"] = is_healthy()
         except Exception:
             self._health["vector"] = False
 
@@ -101,7 +112,7 @@ class LLMRouter:
             "general": ["ollama", "gemini", "vector", "graph", "offline"],
             "research": ["ollama", "gemini", "vector", "graph", "offline"],
             "legal_analysis": ["ollama", "gemini", "vector", "graph", "offline"],
-            "legal_drafting": ["ollama", "gemini", "vector", "offline"],
+            "legal_drafting": ["ollama", "gemini"],
             "document_analysis": ["ollama", "vector", "graph", "offline"],
             "case_strategy": ["ollama", "vector", "graph", "offline"],
             "compliance": ["ollama", "vector", "graph", "offline"],
@@ -109,6 +120,18 @@ class LLMRouter:
             "quick_query": ["ollama", "gemini", "vector", "offline"],
         }
         return mode_routes.get(mode, self._get_provider_order())
+
+    def _mix_gemini_traffic(self, providers: list[str]) -> list[str]:
+        if "ollama" not in providers or "gemini" not in providers:
+            return providers
+        if not self._health.get("gemini"):
+            return providers
+        if not self._circuit_breakers["gemini"].can_execute():
+            return providers
+        if random.random() < GEMINI_TRAFFIC_PERCENT:
+            logger.info("gemini_priority_route", percent=GEMINI_TRAFFIC_PERCENT)
+            return ["gemini"] + [p for p in providers if p != "gemini"]
+        return providers
 
     def _get_system_prompt(self, mode: str) -> str:
         from app.ai.prompts.system import SYSTEM_PROMPT
@@ -122,15 +145,16 @@ class LLMRouter:
 
         from app.ai.validators.query_validator import query_validator
 
-        is_legal, confidence, reason = query_validator.is_legal_query(sanitized)
-        if not is_legal:
-            logger.info("query_rejected", reason=reason, confidence=confidence)
-            return query_validator.get_rejection_message(sanitized)
-        if confidence < 0.6 and is_legal:
-            pass
+        if mode not in SKIP_VALIDATION_MODES:
+            is_legal, confidence, reason = query_validator.is_legal_query(sanitized)
+            if not is_legal:
+                logger.info("query_rejected", reason=reason, confidence=confidence)
+                return query_validator.get_rejection_message(sanitized)
+            if confidence < 0.6 and is_legal:
+                pass
 
         greeting = sanitized.lower().strip() in ["hi", "hello", "hey", "namaste", "namaskar"]
-        if greeting:
+        if greeting and mode not in SKIP_VALIDATION_MODES:
             logger.info("greeting_detected")
             return query_validator.get_greeting_response()
 
@@ -144,7 +168,7 @@ class LLMRouter:
             )
 
         delimited_prompt = self._wrap_with_delimiters(sanitized)
-        providers = self._get_mode_routing(mode)
+        providers = self._mix_gemini_traffic(self._get_mode_routing(mode))
         last_error = None
 
         for provider in providers:
@@ -183,13 +207,14 @@ class LLMRouter:
 
         from app.ai.validators.query_validator import query_validator
 
-        is_legal, confidence, reason = query_validator.is_legal_query(sanitized)
-        if not is_legal:
-            yield query_validator.get_rejection_message(sanitized)
-            return
+        if mode not in SKIP_VALIDATION_MODES:
+            is_legal, confidence, reason = query_validator.is_legal_query(sanitized)
+            if not is_legal:
+                yield query_validator.get_rejection_message(sanitized)
+                return
 
         greeting = sanitized.lower().strip() in ["hi", "hello", "hey", "namaste", "namaskar"]
-        if greeting:
+        if greeting and mode not in SKIP_VALIDATION_MODES:
             yield query_validator.get_greeting_response()
             return
 
@@ -394,15 +419,11 @@ class LLMRouter:
 
     async def _route_vector(self, query: str) -> Optional[str]:
         try:
-            from app.ingestion.chroma.vector_store import get_vector_store
+            from app.ingestion.chroma.vector_store import query_vector_store
 
-            vs = get_vector_store()
-            start_time = time.time()
-            results = vs.search(query, k=5)
-            latency = time.time() - start_time
-            if results and results.get("documents") and results["documents"][0]:
-                context = "\n\n".join(results["documents"][0])
-                return f"Based on relevant documents:\n\n{context}\n\nQuery: {query}"
+            context = await query_vector_store(query, n_results=5)
+            if context and len(context) > 50:
+                return context
             return None
         except Exception as e:
             logger.error("vector_search_failed", error=str(e))

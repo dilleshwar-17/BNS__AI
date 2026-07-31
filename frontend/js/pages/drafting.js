@@ -49,8 +49,14 @@ window.drafting = {
             civil_plaint: 'File a civil suit plaint', divorce_petition: 'File for divorce',
             will: 'Create a last will and testament'
         };
+        const icons = {
+            fir: '📄', legal_notice: '📬', bail_application: '🛡️',
+            affidavit: '📋', consumer_complaint: '🛠️', agreement: '📑',
+            civil_plaint: '⚖️', divorce_petition: '💍', will: '💼'
+        };
         grid.innerHTML = this.draftTypes.map(type => `
-            <div class="draft-card">
+            <div class="draft-card reveal">
+                <div class="draft-card-icon">${icons[type] || '📄'}</div>
                 <h3>${labels[type] || type}</h3>
                 <p>${descriptions[type] || ''}</p>
                 <button class="btn btn-primary btn-sm" onclick="drafting.previewTemplate('${type}')">Generate</button>

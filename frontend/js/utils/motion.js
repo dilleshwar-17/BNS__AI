@@ -4,6 +4,21 @@
       this.navbarScroll()
       this.scrollReveal()
       this.cardMouseGlow()
+      this.watchDynamicContent()
+    },
+
+    watchDynamicContent() {
+      if (!window.MutationObserver) return
+      const observer = new MutationObserver(() => {
+        this.scrollReveal()
+        this.cardMouseGlow()
+      })
+      observer.observe(document.body, { childList: true, subtree: true })
+    },
+
+    refresh() {
+      this.scrollReveal()
+      this.cardMouseGlow()
     },
 
     navbarScroll() {
@@ -28,7 +43,17 @@
     },
 
     scrollReveal() {
-      if (!window.IntersectionObserver) return
+      const revealSelector = '.reveal, .reveal-left, .reveal-right, .reveal-scale'
+
+      if (!window.IntersectionObserver) {
+        document.querySelectorAll(revealSelector).forEach((el) => el.classList.add('visible'))
+        return
+      }
+
+      const isInViewport = (el) => {
+        const r = el.getBoundingClientRect()
+        return r.top < window.innerHeight && r.bottom > 0
+      }
 
       const observer = new IntersectionObserver(
         (entries) => {
@@ -42,13 +67,21 @@
         { threshold: 0.1, rootMargin: '0px 0px -40px 0px' }
       )
 
-      document.querySelectorAll(
-        '.reveal, .reveal-left, .reveal-right, .reveal-scale'
-      ).forEach((el) => observer.observe(el))
+      document.querySelectorAll(revealSelector).forEach((el) => {
+        if (el.dataset.motionObserved) return
+        el.dataset.motionObserved = '1'
+        if (isInViewport(el)) {
+          el.classList.add('visible')
+        } else {
+          observer.observe(el)
+        }
+      })
     },
 
     cardMouseGlow() {
       document.querySelectorAll('.draft-card, .feature-card, .stat-card').forEach((card) => {
+        if (card.dataset.motionGlow) return
+        card.dataset.motionGlow = '1'
         card.addEventListener('mousemove', (e) => {
           const rect = card.getBoundingClientRect()
           const x = ((e.clientX - rect.left) / rect.width) * 100

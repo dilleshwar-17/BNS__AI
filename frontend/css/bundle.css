@@ -29,6 +29,400 @@
   --hero-bg: #f0f5ff;
 }
 
+/* ========== DARK THEME ========== */
+[data-theme="dark"] {
+  --primary: #3b82f6;
+  --primary-light: #60a5fa;
+  --primary-dark: #1e40af;
+  --accent: #3b82f6;
+  --accent-light: #60a5fa;
+  --bg: #0b1220;
+  --bg-secondary: #111a2c;
+  --bg-tertiary: #1e2a40;
+  --surface: #141f33;
+  --text: #e8eef7;
+  --text-secondary: #9fb0c8;
+  --text-tertiary: #64748b;
+  --border: #22304a;
+  --border-light: #1a2438;
+  --shadow-sm: 0 1px 2px rgba(0,0,0,0.4);
+  --shadow: 0 1px 3px rgba(0,0,0,0.4), 0 1px 2px rgba(0,0,0,0.3);
+  --shadow-md: 0 4px 16px rgba(0,0,0,0.45);
+  --shadow-lg: 0 12px 32px rgba(0,0,0,0.5);
+  --shadow-xl: 0 20px 48px rgba(0,0,0,0.55);
+  --hero-bg: #0a1120;
+}
+
+/* Theme transition */
+body, #navbar, .hero, .hero-chat, .partner-section, .section-dark,
+.feature-card, .stat-card, .testimonial-card, .draft-card, .wizard-group,
+.chat-sidebar, .chat-main, .chat-header, .chat-input-area, .draft-preview,
+.faq-item, .faq-question, .wizard-input, .dashboard-list-item,
+.drafting-sidebar, .draft-recent-item, .toast {
+  transition: background-color 0.3s ease, color 0.3s ease, border-color 0.3s ease, box-shadow 0.3s ease;
+}
+
+[data-theme="dark"] #navbar {
+  background: rgba(11, 18, 32, 0.85);
+  border-bottom-color: var(--border);
+}
+
+[data-theme="dark"] #navbar.scrolled {
+  background: rgba(11, 18, 32, 0.95);
+}
+
+[data-theme="dark"] .nav-link:hover {
+  background: var(--bg-tertiary);
+}
+
+[data-theme="dark"] .nav-link.active {
+  background: rgba(59, 130, 246, 0.12);
+  color: var(--accent-light);
+}
+
+[data-theme="dark"] .hero {
+  background: linear-gradient(180deg, #0a1120 0%, var(--bg) 100%);
+}
+
+[data-theme="dark"] .hero h1 {
+  color: var(--text);
+}
+
+[data-theme="dark"] .hero h1 span {
+  background: linear-gradient(135deg, #60a5fa 0%, #38bdf8 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+[data-theme="dark"] .hero-tag {
+  background: rgba(59, 130, 246, 0.12);
+  color: var(--accent-light);
+}
+
+[data-theme="dark"] .hero-chat-header {
+  background: var(--bg-secondary);
+  border-bottom-color: var(--border);
+}
+
+[data-theme="dark"] .hero-chat-bubble.bot {
+  background: var(--bg-tertiary);
+  color: var(--text);
+}
+
+[data-theme="dark"] .hero-chat-bubble.bot:hover {
+  background: #27354f;
+}
+
+[data-theme="dark"] .hero-chat-bubble.user {
+  background: var(--primary);
+}
+
+[data-theme="dark"] .hero-chat-input {
+  background: var(--surface);
+  border-top-color: var(--border);
+}
+
+[data-theme="dark"] .hero-chat-input input {
+  color: var(--text);
+}
+
+[data-theme="dark"] .partner-section {
+  background: var(--bg-secondary);
+  border-color: var(--border);
+}
+
+[data-theme="dark"] .partner-logo {
+  background: var(--surface);
+  border-color: var(--border);
+  color: var(--text-tertiary);
+}
+
+[data-theme="dark"] .partner-logo:hover {
+  border-color: var(--accent);
+  color: var(--accent-light);
+}
+
+[data-theme="dark"] .section-dark {
+  background: var(--bg-secondary);
+}
+
+[data-theme="dark"] .stat-number {
+  color: var(--accent-light);
+}
+
+[data-theme="dark"] .feature-card {
+  background: var(--surface);
+  border-color: var(--border);
+}
+
+[data-theme="dark"] .feature-card:hover {
+  border-color: rgba(59, 130, 246, 0.35);
+}
+
+[data-theme="dark"] .feature-icon {
+  background: rgba(59, 130, 246, 0.12);
+}
+
+[data-theme="dark"] .testimonial-card {
+  background: var(--surface);
+  border-color: var(--border);
+}
+
+[data-theme="dark"] .faq-item {
+  background: var(--surface);
+  border-color: var(--border);
+}
+
+[data-theme="dark"] .faq-question {
+  background: var(--surface);
+  color: var(--text);
+}
+
+[data-theme="dark"] .faq-question:hover {
+  background: var(--bg-tertiary);
+}
+
+[data-theme="dark"] .chat-sidebar {
+  background: var(--bg-secondary);
+  border-right-color: var(--border);
+}
+
+[data-theme="dark"] .chat-item:hover {
+  background: var(--bg-tertiary);
+}
+
+[data-theme="dark"] .chat-item.active {
+  background: rgba(59, 130, 246, 0.12);
+}
+
+[data-theme="dark"] .chat-main {
+  background: var(--surface);
+}
+
+[data-theme="dark"] .chat-header {
+  background: var(--surface);
+  border-bottom-color: var(--border);
+}
+
+[data-theme="dark"] .chat-mode-select {
+  background: var(--bg);
+  border-color: var(--border);
+  color: var(--text);
+}
+
+[data-theme="dark"] .chat-messages {
+  background: var(--bg);
+}
+
+[data-theme="dark"] .message.assistant {
+  background: var(--bg-secondary);
+  border-color: var(--border);
+  color: var(--text);
+}
+
+[data-theme="dark"] .message.assistant code {
+  background: rgba(59, 130, 246, 0.15);
+}
+
+[data-theme="dark"] .chat-input-area {
+  background: var(--surface);
+  border-top-color: var(--border);
+}
+
+[data-theme="dark"] .chat-input-area textarea {
+  background: var(--bg);
+  border-color: var(--border);
+  color: var(--text);
+}
+
+[data-theme="dark"] .draft-card {
+  background: var(--surface);
+  border-color: var(--border);
+}
+
+[data-theme="dark"] .draft-card:hover {
+  border-color: rgba(59, 130, 246, 0.35);
+  box-shadow: var(--shadow-md);
+}
+
+[data-theme="dark"] .draft-time {
+  background: var(--bg-tertiary);
+}
+
+[data-theme="dark"] .draft-preview {
+  background: var(--surface);
+  border-color: var(--border);
+}
+
+[data-theme="dark"] .draft-preview pre {
+  background: var(--bg);
+  border-color: var(--border);
+  color: var(--text);
+}
+
+[data-theme="dark"] .drafting-sidebar {
+  background: var(--surface);
+  border-color: var(--border);
+}
+
+[data-theme="dark"] .draft-recent-item {
+  background: var(--bg-secondary);
+  border-color: var(--border);
+}
+
+[data-theme="dark"] .draft-recent-item:hover {
+  background: rgba(59, 130, 246, 0.08);
+}
+
+[data-theme="dark"] .wizard-group {
+  background: var(--surface);
+  border-color: var(--border);
+}
+
+[data-theme="dark"] .wizard-input {
+  background: var(--bg);
+  border-color: var(--border);
+  color: var(--text);
+}
+
+[data-theme="dark"] .wizard-input:focus {
+  border-color: var(--accent);
+  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.15);
+}
+
+[data-theme="dark"] .wizard-progress-steps-vertical .wizard-step {
+  background: var(--bg-secondary);
+  border-color: var(--border);
+}
+
+[data-theme="dark"] .wizard-step-num {
+  background: var(--bg-tertiary);
+  color: var(--text-tertiary);
+}
+
+[data-theme="dark"] .wizard-step.active .wizard-step-num {
+  background: var(--accent);
+  color: #fff;
+}
+
+[data-theme="dark"] .wizard-step.completed .wizard-step-num {
+  background: #10b981;
+  color: #fff;
+}
+
+[data-theme="dark"] .wizard-error-banner {
+  background: rgba(239, 68, 68, 0.1);
+  border-color: rgba(239, 68, 68, 0.3);
+  color: #fca5a5;
+}
+
+[data-theme="dark"] .stat-card {
+  background: var(--surface);
+  border-color: var(--border);
+}
+
+[data-theme="dark"] .dashboard-list-item {
+  background: var(--surface);
+  border-color: var(--border);
+}
+
+[data-theme="dark"] .dashboard-list-item .item-title {
+  color: var(--text);
+}
+
+[data-theme="dark"] .toast {
+  background: var(--text);
+  color: var(--bg);
+}
+
+[data-theme="dark"] .drop-zone {
+  border-color: var(--border);
+  background: var(--bg-secondary);
+}
+
+[data-theme="dark"] .drop-zone:hover,
+[data-theme="dark"] .drop-zone.drag-over {
+  border-color: var(--accent);
+  background: rgba(59, 130, 246, 0.08);
+}
+
+[data-theme="dark"] .file-item {
+  background: var(--bg-tertiary);
+}
+
+[data-theme="dark"] .editor-toolbar {
+  background: var(--bg-secondary);
+  border-color: var(--border);
+}
+
+[data-theme="dark"] .document-page {
+  background: #ffffff;
+  color: #0f172a;
+}
+
+[data-theme="dark"] .generation-progress-card {
+  background: var(--surface);
+  border-color: var(--border);
+}
+
+[data-theme="dark"] .prog-step {
+  background: var(--bg-secondary);
+  color: var(--text-secondary);
+}
+
+[data-theme="dark"] .stepper-container {
+  background: var(--bg-secondary);
+  border-color: var(--border);
+}
+
+[data-theme="dark"] .stepper-node {
+  background: var(--surface);
+  border-color: var(--border);
+}
+
+[data-theme="dark"] .stepper-label {
+  color: var(--text-secondary);
+}
+
+[data-theme="dark"] .stepper-item.active .stepper-label {
+  color: var(--text);
+}
+
+[data-theme="dark"] .loading-screen p {
+  color: var(--text-tertiary);
+}
+
+[data-theme="dark"] .cta-section {
+  background: linear-gradient(135deg, #1e293b 0%, #0f172a 100%);
+}
+
+/* Auth page (uses jade theme in styles.css, adapt for bundle) */
+[data-theme="dark"] .auth-card {
+  background: var(--surface);
+  border-color: var(--border);
+  box-shadow: var(--shadow-lg);
+}
+
+[data-theme="dark"] .form-group input {
+  background: var(--bg);
+  border-color: var(--border);
+  color: var(--text);
+}
+
+[data-theme="dark"] .form-group input:focus {
+  border-color: var(--accent);
+  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.15);
+}
+
+[data-theme="dark"] .form-group label {
+  color: var(--text-secondary);
+}
+
+[data-theme="dark"] .form-footer a {
+  color: var(--accent-light);
+}
+
 *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
 html { scroll-behavior: smooth; }
@@ -1015,3 +1409,46 @@ img { max-width: 100%; }
   .wizard-nav { flex-direction: column; gap: 10px; }
   .dashboard-page { padding: 20px 16px; }
 }
+
+/* ==========================================
+   SECTION-DARK CONTRAST FIX
+   Cards were blending into the section background
+   and text was not clearly visible. Elevated card
+   surface + white text in dark theme.
+   ========================================== */
+[data-theme="dark"] .section-dark .feature-card {
+  background: #1c2a45;
+  border-color: rgba(255, 255, 255, 0.14);
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.25);
+}
+[data-theme="dark"] .section-dark .feature-card h3 { color: #ffffff; }
+[data-theme="dark"] .section-dark .feature-card p { color: rgba(255, 255, 255, 0.88); }
+[data-theme="dark"] .section-dark .feature-card .feature-icon { background: rgba(59, 130, 246, 0.18); }
+[data-theme="dark"] .section-dark .feature-card .feature-icon svg { stroke: #93c5fd; }
+[data-theme="dark"] .section-dark .section-header h2 { color: #ffffff; }
+[data-theme="dark"] .section-dark .section-header p { color: rgba(255, 255, 255, 0.8); }
+[data-theme="light"] .section-dark .feature-card { background: #f0f4f8; border-color: rgba(13, 138, 94, 0.2); }
+
+/* ==========================================
+   CHAT GREETING
+   ========================================== */
+.greeting-content { max-width: 520px; text-align: left; }
+.greeting-title { font-size: 20px; font-weight: 700; color: var(--text-primary); margin-bottom: 8px; }
+.greeting-content ul { padding-left: 20px; margin: 8px 0; display: grid; gap: 4px; }
+.greeting-content li { font-size: 14px; line-height: 1.55; }
+.greeting-content strong { color: var(--jade-light); }
+.greeting-chips { display: flex; flex-wrap: wrap; gap: 8px; justify-content: center; max-width: 560px; }
+.greeting-chips .btn { font-size: 13px; padding: 8px 14px; border-radius: 999px; white-space: normal; }
+
+/* ==========================================
+   AUTH CARD
+   ========================================== */
+.auth-icon { font-size: 44px; text-align: center; margin-bottom: 12px; }
+.auth-subtitle { text-align: center; color: var(--text-secondary); font-size: 14px; margin: -16px 0 24px; }
+.auth-card .btn { width: 100%; }
+
+/* ==========================================
+   DASHBOARD STAT ICON + BADGE
+   ========================================== */
+.stat-icon { font-size: 28px; margin-bottom: 8px; }
+.badge { display: inline-block; padding: 3px 10px; font-size: 12px; font-weight: 600; border-radius: 999px; background: rgba(37, 99, 235, 0.12); color: var(--accent, #2563eb); border: 1px solid rgba(37, 99, 235, 0.2); }

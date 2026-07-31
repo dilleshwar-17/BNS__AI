@@ -58,6 +58,13 @@
 .chat-input-area .btn { padding: 12px 24px; align-self: center; }
 .chat-empty { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 16px; color: var(--text-secondary); }
 .chat-empty .empty-icon { font-size: 64px; opacity: 0.5; }
+.greeting-content { max-width: 520px; text-align: left; }
+.greeting-title { font-size: 20px; font-weight: 700; color: var(--text-primary); margin-bottom: 8px; }
+.greeting-content ul { padding-left: 20px; margin: 8px 0; display: grid; gap: 4px; }
+.greeting-content li { font-size: 14px; line-height: 1.55; }
+.greeting-content strong { color: var(--jade-light); }
+.greeting-chips { display: flex; flex-wrap: wrap; gap: 8px; justify-content: center; max-width: 560px; }
+.greeting-chips .btn { font-size: 13px; padding: 8px 14px; border-radius: 999px; white-space: normal; }
 .message-actions { display: flex; gap: 8px; margin-top: 8px; }
 .message-actions button { background: none; border: 1px solid var(--glass-border); color: var(--text-secondary); padding: 4px 10px; border-radius: 4px; font-size: 12px; cursor: pointer; transition: all 0.2s; }
 .message-actions button:hover { border-color: var(--jade); color: var(--jade-light); }

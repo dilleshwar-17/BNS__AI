@@ -2,8 +2,10 @@ const loginPage = {
     render() {
         return `
             <div class="auth-page">
-                <div class="auth-card">
+                <div class="auth-card reveal">
+                    <div class="auth-icon">⚖️</div>
                     <h2>Welcome Back</h2>
+                    <p class="auth-subtitle">Sign in to continue to BNS AI</p>
                     <div class="error-message" id="login-error"></div>
                     <form id="login-form" onsubmit="loginPage.handleSubmit(event)">
                         <div class="form-group">
@@ -15,7 +17,7 @@ const loginPage = {
                             <input type="password" id="login-password" required placeholder="Enter your password">
                         </div>
                         <div class="form-group">
-                            <button type="submit" class="btn btn-primary">Login</button>
+                            <button type="submit" class="btn btn-primary btn-block">Login</button>
                         </div>
                     </form>
                     <div class="form-footer">Don't have an account? <a href="#/register">Register</a></div>
@@ -39,3 +41,5 @@ const loginPage = {
         }
     },
 };
+
+window.loginPage = loginPage;

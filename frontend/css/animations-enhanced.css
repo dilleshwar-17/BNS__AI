@@ -664,47 +664,50 @@
 /* ==========================================
    11. SCROLL REVEAL
    ========================================== */
+/* Transform-only reveal: opacity is intentionally left alone so text is
+   always painted — elements with backdrop-filter can fail to render their
+   text during an opacity transition (compositor bug). */
 .reveal {
-  opacity: 0;
-  transform: translateY(30px);
-  transition: opacity 0.6s var(--ease-out-expo), transform 0.6s var(--ease-out-expo);
+  opacity: 1;
+  transform: translateY(24px);
+  transition: transform 0.6s var(--ease-out-expo);
+  will-change: transform;
 }
 
 .reveal.visible {
-  opacity: 1;
   transform: translateY(0);
 }
 
 .reveal-left {
-  opacity: 0;
-  transform: translateX(-30px);
-  transition: opacity 0.6s var(--ease-out-expo), transform 0.6s var(--ease-out-expo);
+  opacity: 1;
+  transform: translateX(-24px);
+  transition: transform 0.6s var(--ease-out-expo);
+  will-change: transform;
 }
 
 .reveal-left.visible {
-  opacity: 1;
   transform: translateX(0);
 }
 
 .reveal-right {
-  opacity: 0;
-  transform: translateX(30px);
-  transition: opacity 0.6s var(--ease-out-expo), transform 0.6s var(--ease-out-expo);
+  opacity: 1;
+  transform: translateX(24px);
+  transition: transform 0.6s var(--ease-out-expo);
+  will-change: transform;
 }
 
 .reveal-right.visible {
-  opacity: 1;
   transform: translateX(0);
 }
 
 .reveal-scale {
-  opacity: 0;
-  transform: scale(0.9);
-  transition: opacity 0.6s var(--ease-out-expo), transform 0.6s var(--ease-out-back);
+  opacity: 1;
+  transform: scale(0.94);
+  transition: transform 0.6s var(--ease-out-back);
+  will-change: transform;
 }
 
 .reveal-scale.visible {
-  opacity: 1;
   transform: scale(1);
 }
 

@@ -39,10 +39,9 @@ async def _check_neo4j() -> dict:
 
 async def _check_chroma() -> dict:
     try:
-        from app.ingestion.chroma.vector_store import get_vector_store
+        from app.ingestion.chroma.vector_store import is_healthy
 
-        vs = get_vector_store()
-        healthy = vs.health_check()
+        healthy = is_healthy()
         return {"status": "healthy" if healthy else "unhealthy"}
     except Exception as e:
         return {"status": "unhealthy", "error": str(e)}

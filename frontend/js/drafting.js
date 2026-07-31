@@ -144,7 +144,7 @@ const drafting = {
             items.forEach(t => {
                 const icon = this.getIcon(t.id);
                 html += `
-                    <div class="draft-card" onclick="drafting.startWizard('${t.id}')">
+                    <div class="draft-card reveal" onclick="drafting.startWizard('${t.id}')">
                         <div class="draft-card-icon">${icon}</div>
                         <h3>${t.title}</h3>
                         <p>${t.description || ''}</p>

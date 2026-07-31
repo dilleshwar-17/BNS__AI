@@ -6,3 +6,5 @@ const logout = {
         router.navigate('/');
     },
 };
+
+window.logout = logout;
