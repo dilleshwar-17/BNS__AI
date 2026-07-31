@@ -6,29 +6,97 @@ window.app = {
             api.setToken(token);
             const rt = localStorage.getItem('refresh_token');
             if (rt) api.setRefreshToken(rt);
-            try { return await window.authAPI.me(); } catch {}
+            try {
+                const u = await window.authAPI.me();
+                this.currentUser = u;
+                this.updateUI();
+                return u;
+            } catch (err) {
+                console.error("Token validation failed, attempting refresh or re-login", err);
+            }
         }
-        const guestId = 'guest_' + Date.now();
+
+        // Try to refresh token
+        const rt = localStorage.getItem('refresh_token');
+        if (rt) {
+            try {
+                const data = await window.authAPI.refresh();
+                const u = await window.authAPI.me();
+                this.currentUser = u;
+                this.updateUI();
+                return u;
+            } catch (err) {
+                console.error("Token refresh failed", err);
+            }
+        }
+
+        // Check if we have persistent guest credentials saved in localStorage
+        let guestUsername = localStorage.getItem('guest_username');
+        let guestPassword = localStorage.getItem('guest_password');
+
+        if (guestUsername && guestPassword) {
+            try {
+                const data = await api.post('/auth/login', { username: guestUsername, password: guestPassword });
+                api.setToken(data.access_token);
+                api.setRefreshToken(data.refresh_token);
+                const u = await window.authAPI.me();
+                this.currentUser = u;
+                this.updateUI();
+                return u;
+            } catch (err) {
+                console.warn("Stored guest credentials failed to log in, creating a new user", err);
+                localStorage.removeItem('guest_username');
+                localStorage.removeItem('guest_password');
+            }
+        }
+
+        // Create new guest credentials and persist them
+        const guestId = 'guest_' + Math.random().toString(36).substring(2, 11) + '_' + Date.now();
+        const pwd = 'GuestPass1_' + Math.random().toString(36).substring(2, 7);
+
         try {
-            await api.post('/auth/register', { email: guestId + '@local.dev', username: guestId, password: 'GuestPass1' });
-        } catch (e) {}
+            await api.post('/auth/register', { email: guestId + '@local.dev', username: guestId, password: pwd });
+            localStorage.setItem('guest_username', guestId);
+            localStorage.setItem('guest_password', pwd);
+        } catch (e) {
+            console.error("Guest registration failed", e);
+        }
+
         try {
-            const data = await api.post('/auth/login', { username: guestId, password: 'GuestPass1' });
+            const data = await api.post('/auth/login', { username: guestId, password: pwd });
             api.setToken(data.access_token);
             api.setRefreshToken(data.refresh_token);
+            const u = await window.authAPI.me();
+            this.currentUser = u;
+            this.updateUI();
+            return u;
         } catch (e) {
+            // Last resort hardcoded guest account
             try {
                 const data = await api.post('/auth/login', { username: 'guest', password: 'GuestPass1' });
                 api.setToken(data.access_token);
                 api.setRefreshToken(data.refresh_token);
-            } catch (e) {}
+                const u = await window.authAPI.me();
+                this.currentUser = u;
+                this.updateUI();
+                return u;
+            } catch (e) {
+                console.error("All fallback auto-logins failed", e);
+            }
         }
     },
 
     async init() {
         this.setupRoutes();
-        router.start();
-        this.autoLogin().catch(() => {});
+        this.showLoading(true);
+        try {
+            await this.autoLogin();
+        } catch (e) {
+            console.error("Auto login failed during initialization", e);
+        } finally {
+            this.showLoading(false);
+            router.start();
+        }
     },
 
     setupRoutes() {

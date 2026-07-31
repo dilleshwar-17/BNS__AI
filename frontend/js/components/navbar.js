@@ -13,8 +13,6 @@ const navbar = {
                 </div>
                 <div class="nav-actions">
                     <button class="icon-btn" id="theme-toggle" onclick="app.toggleTheme()">🌙</button>
-                    <a href="#/login" class="btn btn-outline btn-sm" id="login-btn">Login</a>
-                    <a href="#/register" class="btn btn-primary btn-sm" id="register-btn">Register</a>
                     <div id="user-area" style="display:none;align-items:center;gap:12px;">
                         <span class="user-badge" id="user-name">User</span>
                         <button class="btn btn-outline btn-sm" onclick="logout.execute()">Logout</button>
