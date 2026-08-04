@@ -91,6 +91,12 @@ services:
       LOG_LEVEL: ${LOG_LEVEL:-WARNING}
       CORS_ORIGINS: ${CORS_ORIGINS:?CORS_ORIGINS is required}
       ENVIRONMENT: production
+      # --- Pool sizing (raised from dev defaults for concurrent load) ---
+      POOL_SIZE: ${POOL_SIZE:-50}
+      MAX_OVERFLOW: ${MAX_OVERFLOW:-100}
+      POOL_PRE_PING: ${POOL_PRE_PING:-true}
+      # --- Worker count override for gunicorn ------------------------------
+      WEB_CONCURRENCY: ${WEB_CONCURRENCY:-}
     depends_on:
       - postgres
       - redis
@@ -100,14 +106,35 @@ services:
       - bnsai_network
     restart: unless-stopped
     deploy:
-      replicas: 2
+      replicas: ${API_REPLICAS:-1}
       resources:
         limits:
-          cpus: "1"
-          memory: 1G
+          cpus: ${API_CPUS_LIMIT:-4}
+          memory: 2G
         reservations:
-          cpus: "0.5"
+          cpus: ${API_CPUS_RESERVE:-1}
           memory: 512M
+
+  loadtest:
+    image: python:3.12-slim
+    command: >
+      sh -c "pip install --no-cache-dir httpx psutil &&
+             python load_test.py --host api --port 8000
+               --users $${LOAD_USERS:-3000}
+               --rise $${LOAD_RISE:-1000}
+               --duration $${LOAD_DURATION:-45}
+               --out /tmp/LOAD_REPORT.md"
+    environment:
+      PYTHONUNBUFFERED: "1"
+    volumes:
+      - ./backend:/app
+    working_dir: /app
+    depends_on:
+      - api
+    networks:
+      - bnsai_network
+    profiles:
+      - loadtest
 
   frontend:
     build:
@@ -127,6 +154,7 @@ networks:
 
 volumes:
   postgres_data:
+  redis_data:
   neo4j_data:
   chroma_data:
   ollama_data:

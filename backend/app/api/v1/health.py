@@ -1,125 +1,64 @@
-import asyncio
+"""Health endpoints.
+
+- ``GET /health/live``  — process liveness (always 200 when serving).
+- ``GET /health/ready`` — readiness: real dependency checks; 200 only if all
+  required dependencies are available, 503 otherwise.
+- ``GET /api/v1/health`` — compatibility alias returning the same readiness info.
+"""
+
+from __future__ import annotations
+
+from typing import Literal
 
 from fastapi import APIRouter
+from fastapi.responses import JSONResponse
 
-from app.core.cache import get_cache
-from app.core.logging import get_logger
-from app.core.settings import get_settings
-from app.database.session import check_db_health
+from app.core.request_id import get_request_id
+from app.schemas.health import DependencyHealth, HealthResponse
+from app.services.health import health_checker
 
-logger = get_logger(__name__)
 router = APIRouter(tags=["health"])
 
-
-async def _check_redis() -> dict:
-    try:
-        import redis.asyncio as redis
-
-        settings = get_settings()
-        client = redis.from_url(settings.redis_url)
-        await client.ping()
-        await client.aclose()
-        return {"status": "healthy", "latency_ms": 0}
-    except Exception as e:
-        return {"status": "unhealthy", "error": str(e)}
+# Dependencies that must be healthy for the API to serve meaningful requests.
+REQUIRED_DEPENDENCIES = ("postgres", "redis", "chroma", "neo4j")
 
 
-async def _check_neo4j() -> dict:
-    try:
-        from app.graph.neo4j import Neo4jManager
-
-        manager = Neo4jManager()
-        if manager._driver:
-            await manager._driver.verify_connectivity()
-            return {"status": "healthy"}
-        return {"status": "not_configured"}
-    except Exception as e:
-        return {"status": "unhealthy", "error": str(e)}
-
-
-async def _check_chroma() -> dict:
-    try:
-        from app.ingestion.chroma.vector_store import is_healthy
-
-        healthy = is_healthy()
-        return {"status": "healthy" if healthy else "unhealthy"}
-    except Exception as e:
-        return {"status": "unhealthy", "error": str(e)}
-
-
-async def _check_ollama() -> dict:
-    try:
-        import httpx
-
-        async with httpx.AsyncClient(timeout=5.0) as client:
-            r = await client.get("http://localhost:11434/api/tags")
-            return {"status": "healthy" if r.status_code == 200 else "unhealthy"}
-    except Exception as e:
-        return {"status": "unhealthy", "error": str(e)}
-
-
-@router.get("/health")
-async def health_check():
-    db = await check_db_health()
-    return {
-        "status": "healthy" if db == "healthy" else "unhealthy",
-        "services": {
-            "database": db,
-        },
-    }
-
-
-@router.get("/health/detailed")
-async def health_check_detailed():
-    results = await asyncio.gather(
-        check_db_health(),
-        _check_redis(),
-        _check_neo4j(),
-        _check_chroma(),
-        _check_ollama(),
-        return_exceptions=True,
+@router.get(
+    "/health/live",
+    response_model=HealthResponse,
+    summary="Liveness probe",
+)
+async def health_live() -> HealthResponse:
+    return HealthResponse(
+        status="live",
+        request_id=get_request_id(),
+        checks={name: DependencyHealth(status="ok", latency_ms=0.0) for name in REQUIRED_DEPENDENCIES},
     )
-    db = results[0] if not isinstance(results[0], Exception) else "error"
-    redis = results[1] if not isinstance(results[1], Exception) else {"status": "unhealthy"}
-    neo4j = results[2] if not isinstance(results[2], Exception) else {"status": "unhealthy"}
-    chroma = results[3] if not isinstance(results[3], Exception) else {"status": "unhealthy"}
-    ollama = results[4] if not isinstance(results[4], Exception) else {"status": "unhealthy"}
 
-    all_healthy = all(
-        (s.get("status") if isinstance(s, dict) else s) == "healthy" for s in [db, redis, neo4j, chroma, ollama]
+
+@router.get(
+    "/health/ready",
+    summary="Readiness probe (real dependency checks)",
+    responses={503: {"model": HealthResponse}},
+)
+async def health_ready() -> JSONResponse:
+    checks = await health_checker.check_all()
+    ok = all(checks[name].status == "ok" for name in REQUIRED_DEPENDENCIES)
+    overall: Literal["ready", "unavailable"] = "ready" if ok else "unavailable"
+    response = HealthResponse(
+        status=overall,
+        request_id=get_request_id(),
+        checks=checks,
     )
-    cache_stats = get_cache().get_stats()
-
-    return {
-        "status": "healthy" if all_healthy else "degraded",
-        "services": {
-            "database": db,
-            "redis": redis,
-            "neo4j": neo4j,
-            "vector_store": chroma,
-            "llm": ollama,
-        },
-        "cache": cache_stats,
-    }
+    return JSONResponse(
+        content=response.model_dump(mode="json"),
+        status_code=200 if ok else 503,
+    )
 
 
-@router.get("/health/liveness")
-async def liveness():
-    return {"status": "alive"}
-
-
-@router.get("/health/readiness")
-async def readiness():
-    db = await check_db_health()
-    if db != "healthy":
-        return {"status": "not_ready", "reason": "database_unavailable"}
-    return {"status": "ready"}
-
-
-@router.get("/metrics")
-async def metrics():
-    from app.ai.llms.router import llm_router
-
-    return {
-        "llm": llm_router.get_stats(),
-    }
+@router.get(
+    "/health",
+    summary="Legacy health endpoint",
+)
+async def health_legacy() -> JSONResponse:
+    return await health_ready()

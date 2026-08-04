@@ -1,48 +1,56 @@
-import asyncio
-import os
-import sys
-from pathlib import Path
-from typing import AsyncGenerator
+"""Shared test fixtures.
 
-import pytest
+All tests that touch the database use an in-memory SQLite engine and override
+the app's ``get_db`` dependency, so the suite runs without external services
+while still exercising the full ORM + service layer.
+"""
+
+from __future__ import annotations
+
+from collections.abc import AsyncIterator
+
 import pytest_asyncio
+from app.db.base import Base
+from app.db.session import get_db
+from app.main import app
 from httpx import ASGITransport, AsyncClient
-
-sys.path.insert(0, str(Path(__file__).resolve().parent.parent.parent))
-
-os.environ["DATABASE_URL"] = "sqlite+aiosqlite:///./bnsai_test.db"
+from sqlalchemy.ext.asyncio import AsyncEngine, AsyncSession, async_sessionmaker, create_async_engine
+from sqlalchemy.pool import StaticPool
 
 
-@pytest.fixture(scope="session")
-def event_loop():
-    loop = asyncio.new_event_loop()
-    asyncio.set_event_loop(loop)
-    yield loop
-    loop.close()
-
-
-@pytest_asyncio.fixture(scope="session", autouse=True)
-async def setup_database():
-    import app.database.models  # noqa: F401 - registers all models with Base.metadata
-    from app.database.base import Base
-    from app.database.session import engine
-
+@pytest_asyncio.fixture
+async def memory_engine() -> AsyncIterator[AsyncEngine]:
+    engine = create_async_engine(
+        "sqlite+aiosqlite://",
+        poolclass=StaticPool,
+        connect_args={"check_same_thread": False},
+        pool_pre_ping=False,
+    )
     async with engine.begin() as conn:
         await conn.run_sync(Base.metadata.create_all)
-    yield
-    async with engine.begin() as conn:
-        await conn.run_sync(Base.metadata.drop_all)
+    yield engine
+    await engine.dispose()
 
 
-@pytest_asyncio.fixture(scope="function")
-async def client() -> AsyncGenerator:
-    from app.main import app
+@pytest_asyncio.fixture
+async def db_session(memory_engine: AsyncEngine) -> AsyncIterator[AsyncSession]:
+    factory = async_sessionmaker(memory_engine, class_=AsyncSession, expire_on_commit=False)
+    async with factory() as session:
+        yield session
 
+
+@pytest_asyncio.fixture
+async def client(memory_engine: AsyncEngine) -> AsyncIterator[AsyncClient]:
+    session_factory = async_sessionmaker(memory_engine, class_=AsyncSession, expire_on_commit=False)
+
+    async def override_get_db() -> AsyncIterator[AsyncSession]:
+        async with session_factory() as session:
+            yield session
+
+    app.dependency_overrides[get_db] = override_get_db
     transport = ASGITransport(app=app)
-    async with AsyncClient(transport=transport, base_url="http://test") as ac:
-        yield ac
-
-
-@pytest.fixture
-def sample_query() -> str:
-    return "What is the procedure for filing an FIR?"
+    try:
+        async with AsyncClient(transport=transport, base_url="http://test") as ac:
+            yield ac
+    finally:
+        app.dependency_overrides.pop(get_db, None)

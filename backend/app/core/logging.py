@@ -1,61 +1,51 @@
+"""Structured JSON logging configuration (structlog).
+
+Every log line carries structured context. The ``request_id`` is bound from the
+request_id contextvar automatically when available.
+"""
+
+from __future__ import annotations
+
 import logging
-import uuid
-from contextvars import ContextVar
-from typing import Optional
+import sys
 
 import structlog
 
-from app.core.settings import get_settings
-
-settings = get_settings()
-
-# Context variable for request_id propagation across async calls
-request_id_var: ContextVar[Optional[str]] = ContextVar("request_id", default=None)
+from app.core.config import get_settings
 
 
-class RequestContextFilter(structlog.stdlib.Processor):
-    """Injects request_id from context vars into every log entry."""
+def configure_logging() -> None:
+    """Configure structlog for the application."""
+    settings = get_settings()
 
-    def __call__(self, logger, method_name, event_dict):
-        rid = request_id_var.get()
-        if rid is not None:
-            event_dict["request_id"] = rid
-        return event_dict
+    logging.basicConfig(
+        format="%(message)s",
+        level=getattr(logging, settings.log_level.upper(), logging.INFO),
+        stream=sys.stdout,
+        force=True,
+    )
 
+    shared_processors: list = [
+        structlog.contextvars.merge_contextvars,
+        structlog.processors.add_log_level,
+        structlog.processors.TimeStamper(fmt="iso", utc=True),
+        structlog.processors.StackInfoRenderer(),
+        structlog.processors.format_exc_info,
+    ]
 
-_request_id_filter = RequestContextFilter()
+    if settings.environment == "development" and not settings.is_production:
+        processors = shared_processors + [structlog.dev.ConsoleRenderer()]
+    else:
+        processors = shared_processors + [structlog.processors.JSONRenderer()]
 
-
-def setup_logging() -> None:
     structlog.configure(
-        processors=[
-            _request_id_filter,
-            structlog.stdlib.add_log_level,
-            structlog.stdlib.PositionalArgumentsFormatter(),
-            structlog.processors.TimeStamper(fmt="iso"),
-            structlog.processors.StackInfoRenderer(),
-            structlog.processors.format_exc_info,
-            structlog.processors.UnicodeDecoder(),
-            structlog.processors.JSONRenderer(),
-        ],
-        context_class=dict,
-        logger_factory=structlog.stdlib.LoggerFactory(),
-        wrapper_class=structlog.stdlib.BoundLogger,
+        processors=processors,
+        wrapper_class=structlog.make_filtering_bound_logger(getattr(logging, settings.log_level.upper(), logging.INFO)),
+        logger_factory=structlog.PrintLoggerFactory(file=sys.stdout),
         cache_logger_on_first_use=True,
     )
 
-    logging.basicConfig(
-        level=getattr(logging, settings.log_level.upper(), logging.INFO),
-        format="%(message)s",
-    )
 
-
-def get_logger(name: str = __name__) -> structlog.stdlib.BoundLogger:
+def get_logger(name: str = "bnsai") -> structlog.stdlib.BoundLogger:
+    """Return a structlog logger bound to the module name."""
     return structlog.get_logger(name)
-
-
-def bind_request_id(request_id: Optional[str] = None) -> str:
-    """Set request_id in context vars. Returns the bound id."""
-    rid = request_id or str(uuid.uuid4())
-    request_id_var.set(rid)
-    return rid

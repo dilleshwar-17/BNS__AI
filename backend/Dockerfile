@@ -1,30 +1,33 @@
-FROM python:3.12-slim AS builder
+# syntax=docker/dockerfile:1
+FROM python:3.12-slim AS base
 
-RUN apt-get update && apt-get install -y --no-install-recommends g++ && \
-    rm -rf /var/lib/apt/lists/*
-
-WORKDIR /app
-
-COPY requirements.txt .
-RUN pip install --no-cache-dir --upgrade pip && \
-    pip install --no-cache-dir --user -r requirements.txt
-
-FROM python:3.12-slim
-
-RUN groupadd -r bnsai && useradd -r -g bnsai -d /app -s /sbin/nologin bnsai
+ENV PYTHONDONTWRITEBYTECODE=1 \
+    PYTHONUNBUFFERED=1 \
+    PIP_NO_CACHE_DIR=1
 
 WORKDIR /app
 
-COPY --from=builder /root/.local /usr/local
-COPY . .
+# System deps for chromadb and the app.
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    build-essential \
+    libpq-dev \
+    curl \
+    && rm -rf /var/lib/apt/lists/*
 
-RUN chown -R bnsai:bnsai /app
+COPY backend/requirements.txt ./requirements.txt
+RUN pip install --upgrade pip && pip install -r requirements.txt
 
+COPY backend/ .
+
+# Create a non-root user.
+RUN useradd --create-home --uid 1000 bnsai && chown -R bnsai:bnsai /app
 USER bnsai
 
 EXPOSE 8000
 
-HEALTHCHECK --interval=30s --timeout=10s --start-period=40s --retries=3 \
-    CMD python -c "import urllib.request; urllib.request.urlopen('http://localhost:8000/api/v1/health/liveness')" || exit 1
+HEALTHCHECK --interval=30s --timeout=5s --start-period=20s --retries=3 \
+    CMD curl -fsS http://localhost:8000/health/ready || exit 1
 
-CMD ["uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "8000", "--workers", "4"]
+# Production: gunicorn manages uvloop Uvicorn workers. Worker count comes from
+# WEB_CONCURRENCY or gunicorn.conf.py (auto-scaled to CPU count).
+CMD ["gunicorn", "-c", "gunicorn.conf.py", "app.main:app"]

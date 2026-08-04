@@ -1,16 +1,31 @@
-from typing import Any
+"""Common response schemas."""
+
+from __future__ import annotations
+
+from typing import Any, Generic, TypeVar
 
 from pydantic import BaseModel
 
-
-class PaginationParams(BaseModel):
-    page: int = 1
-    page_size: int = 20
+T = TypeVar("T")
 
 
-class PaginatedResponse(BaseModel):
-    items: list[Any]
-    total: int
-    page: int
-    page_size: int
-    total_pages: int
+class ErrorDetail(BaseModel):
+    """Structured error contract (spec section 87 / 61)."""
+
+    code: str
+    message: str
+    request_id: str | None = None
+    details: dict[str, Any] | None = None
+
+
+class ErrorEnvelope(BaseModel):
+    error: ErrorDetail
+
+
+class Meta(BaseModel):
+    request_id: str
+
+
+class Envelope(BaseModel, Generic[T]):
+    data: T
+    meta: Meta

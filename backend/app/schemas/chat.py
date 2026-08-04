@@ -1,68 +1,58 @@
+"""Chat API schemas (Phase 8)."""
+
+from __future__ import annotations
+
+import uuid
 from datetime import datetime
-from typing import Literal
 
-from pydantic import BaseModel, field_validator
-
-CHAT_MODES = Literal[
-    "legal_guidance",
-    "legal_drafting",
-    "section_lookup",
-    "case_law",
-    "deep_research",
-    "document_analysis",
-    "legal_procedure",
-    "rights_advisory",
-    "comparison",
-]
+from pydantic import BaseModel, ConfigDict
 
 
-class ChatCreate(BaseModel):
-    title: str = "New Chat"
-    mode: CHAT_MODES = "legal_guidance"
+class CitationRead(BaseModel):
+    chunk_id: uuid.UUID | None = None
+    section_id: str | None = None
+    section_title: str | None = None
+    element_type: str | None = None
+    excerpt: str | None = None
+
+    model_config = ConfigDict(from_attributes=True)
 
 
-class ChatResponse(BaseModel):
-    id: str
-    title: str
-    mode: str
+class MessageRead(BaseModel):
+    id: uuid.UUID
+    role: str
+    content: str
+    intent: str | None = None
+    model: str | None = None
+    grounded: bool | None = None
+    created_at: datetime
+    citations: list[CitationRead] = []
+
+    model_config = ConfigDict(from_attributes=True)
+
+
+class ConversationRead(BaseModel):
+    id: uuid.UUID
+    title: str | None = None
     created_at: datetime
     updated_at: datetime
 
-    model_config = {"from_attributes": True}
+    model_config = ConfigDict(from_attributes=True)
 
 
-class MessageResponse(BaseModel):
-    id: str
-    chat_id: str
-    role: str
-    content: str
-    created_at: datetime
-
-    model_config = {"from_attributes": True}
+class ConversationDetail(ConversationRead):
+    messages: list[MessageRead] = []
 
 
-class ChatSend(BaseModel):
-    message: str
-    mode: CHAT_MODES = "legal_guidance"
-
-    @field_validator("message")
-    @classmethod
-    def validate_message(cls, v: str) -> str:
-        if not v or not v.strip():
-            raise ValueError("Message cannot be empty")
-        if len(v) > 10000:
-            raise ValueError("Message must be at most 10,000 characters")
-        return v.strip()
+class ConversationList(BaseModel):
+    conversations: list[ConversationRead]
 
 
-class ChatFeedback(BaseModel):
-    message_id: str
-    rating: Literal["helpful", "not_helpful", "partially_helpful"]
-    comment: str | None = None
+class SendMessageRequest(BaseModel):
+    content: str = ""
 
-    @field_validator("comment")
-    @classmethod
-    def validate_comment(cls, v: str | None) -> str | None:
-        if v is not None and len(v) > 1000:
-            raise ValueError("Comment must be at most 1,000 characters")
-        return v
+
+class StreamLine(BaseModel):
+    type: str  # "delta" | "citations" | "done"
+    content: str | None = None
+    citations: list[CitationRead] = []

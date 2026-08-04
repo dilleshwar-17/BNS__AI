@@ -1,173 +1,156 @@
-from fastapi import APIRouter, Depends, HTTPException
-from sqlalchemy import func, select
+"""Ingestion jobs router (frontend contract)."""
+
+from __future__ import annotations
+
+import uuid
+
+from fastapi import APIRouter, Depends
+from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.api.deps import get_current_user, require_admin
-from app.core.logging import get_logger
-from app.database.models.ingestion_job import IngestionJob
-from app.database.models.uploaded_file import UploadedFile
-from app.database.models.user import User
-from app.database.session import get_db
-from app.ingestion.service import IngestionService
-from app.schemas.ingestion import IngestionJobListResponse, IngestionJobResponse
+from app.audit.service import audit_service
+from app.auth.dependencies import get_current_user, require_permission
+from app.core.request_id import get_request_id
+from app.db.session import get_db
+from app.ingestion.pipeline import get_latest_version_for_document, run_ingestion
+from app.models.chunks import DocumentChunk
+from app.models.sources import IngestionJob, LegalSource, SourceDocument
+from app.models.user import User
+from app.retrieval.hybrid import HybridRetriever
+from app.schemas.sources import IngestionJobListResponse, IngestionJobRead
+from app.source_management.service import (
+    create_ingestion_job,
+    get_document,
+    mark_processed,
+)
 
-logger = get_logger(__name__)
-router = APIRouter(prefix="/ingestion", tags=["ingestion"])
-
-
-@router.post("/ingest/{file_id}", response_model=IngestionJobResponse)
-async def ingest_document(
-    file_id: str,
-    chunk_size: int = 500,
-    overlap: int = 50,
-    chunk_strategy: str = "recursive",
-    collection_name: str = "ingested_docs",
-    user: User = Depends(get_current_user),
-    db: AsyncSession = Depends(get_db),
-):
-    result = await db.execute(select(UploadedFile).where(UploadedFile.id == file_id))
-    uploaded_file = result.scalar_one_or_none()
-    if not uploaded_file:
-        raise HTTPException(status_code=404, detail="File not found")
-
-    if uploaded_file.user_id != user.id:
-        raise HTTPException(status_code=403, detail="Not your file")
-
-    service = IngestionService(db_session=db)
-    try:
-        stats = await service.ingest_file(
-            file_id=file_id,
-            user_id=user.id,
-            chunk_size=chunk_size,
-            overlap=overlap,
-            chunk_strategy=chunk_strategy,
-            collection_name=collection_name,
-        )
-
-        result = await db.execute(
-            select(IngestionJob).where(IngestionJob.file_id == file_id).order_by(IngestionJob.created_at.desc())
-        )
-        job = result.scalar_one()
-
-        uploaded_file.status = "ingested"
-        await db.commit()
-
-        return IngestionJobResponse(
-            id=job.id,
-            filename=job.filename,
-            doc_type=job.doc_type,
-            status=job.status,
-            progress=job.progress,
-            chunks_count=job.chunks_count,
-            stats=stats,
-            created_at=job.created_at,
-            updated_at=job.updated_at,
-        )
-    except FileNotFoundError:
-        raise HTTPException(status_code=404, detail="File not found on disk")
-    except ValueError as e:
-        raise HTTPException(status_code=400, detail=str(e))
-    except Exception as e:
-        logger.error("ingestion_failed", error=str(e))
-        raise HTTPException(status_code=500, detail=f"Ingestion failed: {str(e)}")
+router = APIRouter()
 
 
-@router.get("/jobs", response_model=IngestionJobListResponse)
-async def list_ingestion_jobs(
-    limit: int = 20,
-    offset: int = 0,
-    user: User = Depends(get_current_user),
-    db: AsyncSession = Depends(get_db),
-):
-    total_q = select(func.count(IngestionJob.id)).where(IngestionJob.user_id == user.id)
-    total = await db.scalar(total_q) or 0
-
-    q = (
-        select(IngestionJob)
-        .where(IngestionJob.user_id == user.id)
-        .order_by(IngestionJob.created_at.desc())
-        .limit(limit)
-        .offset(offset)
-    )
-    result = await db.execute(q)
-    jobs = result.scalars().all()
-
-    return IngestionJobListResponse(
-        total=total,
-        jobs=[
-            IngestionJobResponse(
-                id=j.id,
-                filename=j.filename,
-                doc_type=j.doc_type,
-                status=j.status,
-                progress=j.progress,
-                error_message=j.error_message,
-                chunks_count=j.chunks_count,
-                stats=j.get_stats(),
-                created_at=j.created_at,
-                updated_at=j.updated_at,
-            )
-            for j in jobs
-        ],
-    )
-
-
-@router.get("/jobs/{job_id}", response_model=IngestionJobResponse)
-async def get_ingestion_job(
-    job_id: str,
-    user: User = Depends(get_current_user),
-    db: AsyncSession = Depends(get_db),
-):
-    result = await db.execute(select(IngestionJob).where(IngestionJob.id == job_id))
-    job = result.scalar_one_or_none()
-    if not job:
-        raise HTTPException(status_code=404, detail="Job not found")
-    if job.user_id != user.id:
-        raise HTTPException(status_code=403, detail="Not your job")
-
-    return IngestionJobResponse(
+async def _to_read(job: IngestionJob, filename: str | None = None) -> IngestionJobRead:
+    return IngestionJobRead(
         id=job.id,
-        filename=job.filename,
-        doc_type=job.doc_type,
+        document_id=job.document_id,
+        filename=filename,
         status=job.status,
         progress=job.progress,
-        error_message=job.error_message,
         chunks_count=job.chunks_count,
-        stats=job.get_stats(),
+        error_message=job.error_message,
+        stats=job.stats,
+        chunk_strategy=job.chunk_strategy,
         created_at=job.created_at,
-        updated_at=job.updated_at,
     )
 
 
-@router.get("/admin/jobs", response_model=IngestionJobListResponse)
-async def admin_list_all_jobs(
-    limit: int = 50,
-    offset: int = 0,
-    user: User = Depends(require_admin),
-    db: AsyncSession = Depends(get_db),
-):
-    total_q = select(func.count(IngestionJob.id))
-    total = await db.scalar(total_q) or 0
+async def _job_filename(session: AsyncSession, job: IngestionJob) -> str | None:
+    result = await session.execute(select(SourceDocument.filename).where(SourceDocument.id == job.document_id))
+    return result.scalar_one_or_none()
 
-    q = select(IngestionJob).order_by(IngestionJob.created_at.desc()).limit(limit).offset(offset)
-    result = await db.execute(q)
-    jobs = result.scalars().all()
 
-    return IngestionJobListResponse(
-        total=total,
-        jobs=[
-            IngestionJobResponse(
-                id=j.id,
-                filename=j.filename,
-                doc_type=j.doc_type,
-                status=j.status,
-                progress=j.progress,
-                error_message=j.error_message,
-                chunks_count=j.chunks_count,
-                stats=j.get_stats(),
-                created_at=j.created_at,
-                updated_at=j.updated_at,
+@router.post("/ingest/{document_id}", response_model=IngestionJobRead, summary="Start ingestion")
+async def start_ingestion(
+    document_id: uuid.UUID,
+    chunk_strategy: str = "recursive",
+    current_user: User = Depends(require_permission("ingestion.start")),
+    session: AsyncSession = Depends(get_db),
+) -> IngestionJobRead:
+    doc = await get_document(session, document_id)
+    job = await create_ingestion_job(session, document_id, chunk_strategy=chunk_strategy, created_by=current_user.id)
+    await audit_service.record(
+        session,
+        action="ingestion.start",
+        request_id=get_request_id(),
+        user_id=current_user.id,
+        resource_type="ingestion_job",
+        resource_id=str(job.id),
+    )
+    await session.commit()
+
+    # Execute the pipeline synchronously; the job ends completed or failed.
+    source_version = await get_latest_version_for_document(session, doc)
+    result = await run_ingestion(session, job, doc, source_version=source_version)
+    if result.chunks_count > 0:
+        source = (
+            await session.execute(select(LegalSource).where(LegalSource.id == doc.source_id))
+        ).scalar_one_or_none()
+        if source is not None:
+            await mark_processed(session, source=source, source_version=source_version)
+            await session.commit()
+
+        # Embed chunks into vector + lexical stores (best-effort, non-blocking).
+        try:
+            chunks = (
+                (await session.execute(select(DocumentChunk).where(DocumentChunk.document_id == doc.id)))
+                .scalars()
+                .all()
             )
-            for j in jobs
-        ],
-    )
+            if chunks:
+                retriever = HybridRetriever()
+                retriever.upsert_chunks(
+                    chunk_ids=[c.id for c in chunks],
+                    texts=[c.text for c in chunks],
+                    metadatas=[
+                        {
+                            "source_version_id": str(c.source_version_id),
+                            "document_id": str(c.document_id),
+                            "chapter_id": c.chapter_id,
+                            "chapter_title": c.chapter_title,
+                            "section_id": c.section_id,
+                            "section_title": c.section_title,
+                            "subsection": c.subsection,
+                            "element_type": c.element_type,
+                            "position": c.position,
+                            "content_hash": c.content_hash,
+                        }
+                        for c in chunks
+                    ],
+                )
+        except Exception:  # noqa: BLE001
+            # Log but don't fail the ingestion; embeddings can be rebuilt later.
+            import logging
+
+            logging.getLogger(__name__).exception("Embedding failed for doc %s", doc.id)
+
+    return await _to_read(job, filename=doc.filename)
+
+
+async def _list_response(session: AsyncSession, result_jobs: list[IngestionJob]) -> IngestionJobListResponse:
+    out: list[IngestionJobRead] = []
+    for j in result_jobs:
+        out.append(await _to_read(j, filename=await _job_filename(session, j)))
+    return IngestionJobListResponse(jobs=out)
+
+
+@router.get("/jobs", response_model=IngestionJobListResponse, summary="List my ingestion jobs")
+async def list_jobs(
+    limit: int = 20,
+    current_user: User = Depends(get_current_user),
+    session: AsyncSession = Depends(get_db),
+) -> IngestionJobListResponse:
+    result = await session.execute(select(IngestionJob).order_by(IngestionJob.created_at.desc()).limit(limit))
+    return await _list_response(session, list(result.scalars().all()))
+
+
+@router.get("/admin/jobs", response_model=IngestionJobListResponse, summary="Admin list ingestion jobs")
+async def admin_list_jobs(
+    limit: int = 20,
+    current_user: User = Depends(require_permission("ingestion.read")),
+    session: AsyncSession = Depends(get_db),
+) -> IngestionJobListResponse:
+    result = await session.execute(select(IngestionJob).order_by(IngestionJob.created_at.desc()).limit(limit))
+    return await _list_response(session, list(result.scalars().all()))
+
+
+@router.get("/jobs/{job_id}", response_model=IngestionJobRead, summary="Get an ingestion job")
+async def get_job(
+    job_id: uuid.UUID,
+    current_user: User = Depends(get_current_user),
+    session: AsyncSession = Depends(get_db),
+) -> IngestionJobRead:
+    result = await session.execute(select(IngestionJob).where(IngestionJob.id == job_id))
+    job = result.scalar_one_or_none()
+    if job is None:
+        from app.core.exceptions import NotFoundError
+
+        raise NotFoundError("Ingestion job not found.")
+    return await _to_read(job, await _job_filename(session, job))
