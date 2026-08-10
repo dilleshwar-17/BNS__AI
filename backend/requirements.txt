@@ -1,4 +1,4 @@
-fastapi>=0.115.0
+fastapi>=0.141.1
 uvicorn[standard]>=0.30.0
 gunicorn>=22.0.0
 uvloop>=0.20.0
@@ -19,6 +19,6 @@ pymupdf>=1.24.0
 sentence-transformers>=3.0.0
 rank-bm25>=0.2.2
 structlog>=24.4.0
-fastapi-limiter>=0.1.5
+fastapi-limiter>=0.2.0
 numpy<2.0.0
 alembic>=1.13.0
